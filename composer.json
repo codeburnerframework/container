@@ -1,0 +1,16 @@
+{
+	"name": "codeburner/container",
+	"description": "The faster IoC Container ever seen.",
+	"licence": "MIT",
+	"authors": [
+		{
+			"name": "Alex Rohleder",
+			"email": "alexrohleder96@outlook.com"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"Codeburner\\Container\\": "src"
+		}
+	}
+}
