@@ -86,6 +86,7 @@ class ClassNameTest
 }
 
 $container->bind('someobj', 'ClassNameTest');
+```
 ####Closures
 Some times you need to set some attributes or make some initial logic on objects, you can do it with a closure binding.
 ```php
