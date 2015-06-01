@@ -153,7 +153,7 @@ class Container implements ArrayAccess
 	 */
 	public function singleton($abstract, $concrete)
 	{
-		$this->bind($abstract, $concrete, false);
+		$this->bind($abstract, $concrete, true);
 
 		return $this;
 	}
