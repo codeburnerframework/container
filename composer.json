@@ -1,7 +1,8 @@
 {
 	"name": "codeburner/container",
 	"description": "The faster IoC Container ever seen.",
-	"licence": "MIT",
+	"keywords": ["container", "IoC", "codeburner"],
+	"license": "MIT",
 	"authors": [
 		{
 			"name": "Alex Rohleder",

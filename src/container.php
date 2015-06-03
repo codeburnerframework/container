@@ -2,7 +2,6 @@
 
 namespace Codeburner\Container;
 
-use InvalidArgumentException;
 use ArrayAccess;
 use ReflectionClass;
 use ReflectionParameter;
@@ -92,8 +91,8 @@ class Container implements ArrayAccess
 	public function bind($abstract, $concrete, $shared = false)
 	{
 		if (!$concrete instanceof Closure) {
-			$concrete = function ($app) use ($concrete) {
-				return $app->make($concrete);
+			$concrete = function (Container $container) use ($concrete) {
+				return $container->make($concrete);
 			};
 		}
 
@@ -237,7 +236,7 @@ class Container implements ArrayAccess
 		$constructor = $inspector->getConstructor();
 		$dependencies = $constructor ? $constructor->getParameters() : [];
 
-		$this->cached[$abstract] = function ($abstract, $parameters) use ($inspector, $constructor, $dependencies) {
+		$this->cached[$abstract] = function ($abstract, $parameters) use ($inspector, $dependencies) {
 			if (empty($dependencies)) {
 				return new $abstract;
 			}
@@ -246,7 +245,7 @@ class Container implements ArrayAccess
 				foreach ($dependencies as $dependency) {
 					$class = $dependency->getClass();
 
-					if ($class != null) {
+					if ($class !== null) {
 						if (isset($this->dependencies[$abstract]) && isset($this->dependencies[$abstract][$class->name])) {
 							   $parameters[] = $this->dependencies[$abstract][$class->name];
 						} else $parameters[] = $this->make($class->name);
