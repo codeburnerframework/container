@@ -1,7 +1,7 @@
 # Codeburner IoC Container System
 
-[![Build Status](https://scrutinizer-ci.com/g/codeburnerframework/container/badges/build.png?style=flat-square&branch=master)](https://scrutinizer-ci.com/g/codeburnerframework/container/build-status/master)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/codeburnerframework/container/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/codeburnerframework/container/?style=flat-square&branch=master)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
+[![Quality Score](https://img.shields.io/scrutinizer/g/codeburnerframework/container.svg?style=flat-square)](https://scrutinizer-ci.com/g/codeburnerframework/container)
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/9af2c429-cc7f-4c71-8eac-e3c3ddd4c1d2/big.png)](https://insight.sensiolabs.com/projects/9af2c429-cc7f-4c71-8eac-e3c3ddd4c1d2)
 
