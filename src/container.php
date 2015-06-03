@@ -4,7 +4,6 @@ namespace Codeburner\Container;
 
 use ArrayAccess;
 use ReflectionClass;
-use ReflectionParameter;
 use Closure;
 
 class Container implements ArrayAccess
