@@ -44,9 +44,9 @@ class Container implements ArrayAccess
 	 *
 	 * @return bool
 	 */
-	public function bound($abstract)
+	public function isBound($abstract)
 	{
-		if (isset($this->resolved[$abstract]) or isset($this->resolvable[$abstract])) {
+		if (isset($this->resolved[$abstract]) || isset($this->resolvable[$abstract])) {
 			return true;
 		}
 
@@ -97,7 +97,7 @@ class Container implements ArrayAccess
 			};
 		}
 
-		if ($shared == true) {
+		if ($shared === true) {
 			   $this->resolved[$abstract]   = $concrete($this);
 		} else $this->resolvable[$abstract] = $concrete;
 
@@ -115,7 +115,7 @@ class Container implements ArrayAccess
 	 */
 	public function bindIf($abstract, $concrete, $shared = false)
 	{
-		if (!isset($this->resolved[$abstract]) or !isset($this->resolvable[$abstract])) {
+		if (!isset($this->resolved[$abstract]) || !isset($this->resolvable[$abstract])) {
 			$this->bind($abstract, $concrete, $shared);
 		}
 
@@ -162,7 +162,7 @@ class Container implements ArrayAccess
 	 * Bind an object to the container.
 	 *
 	 * @param string $abstract The alias name that will be used to call the object.
-	 * @param object $concrete The object that will be inserted.
+	 * @param object $instance The object that will be inserted.
 	 *
 	 * @return Codeburner\Container\Container
 	 */	
@@ -225,7 +225,7 @@ class Container implements ArrayAccess
 	 */
 	public function make($abstract, $parameters = [], $force = false)
 	{
-		if ($force == false and $this->bound($abstract)) {
+		if ($force === false && $this->isBound($abstract)) {
 			return $this->offsetGet($abstract);
 		}
 
@@ -247,7 +247,7 @@ class Container implements ArrayAccess
 					$class = $dependency->getClass();
 
 					if ($class != null) {
-						if (isset($this->dependencies[$abstract]) and isset($this->dependencies[$abstract][$class->name])) {
+						if (isset($this->dependencies[$abstract]) && isset($this->dependencies[$abstract][$class->name])) {
 							   $parameters[] = $this->dependencies[$abstract][$class->name];
 						} else $parameters[] = $this->make($class->name);
 					}
@@ -300,7 +300,7 @@ class Container implements ArrayAccess
 	 */
 	public function offsetExists($offset)
 	{
-		return isset($this->resolved[$offset]) or isset($this->resolvable[$offset]);
+		return isset($this->resolved[$offset]) || isset($this->resolvable[$offset]);
 	}
 
 	/**
