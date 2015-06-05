@@ -1,5 +1,6 @@
 # Codeburner IoC Container System
 
+[![Build Status](https://img.shields.io/travis/codeburnerframework/container/master.svg?style=flat-square)](https://travis-ci.org/codeburnerframework/container)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 [![Quality Score](https://img.shields.io/scrutinizer/g/codeburnerframework/container.svg?style=flat-square)](https://scrutinizer-ci.com/g/codeburnerframework/container)
 
