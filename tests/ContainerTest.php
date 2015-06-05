@@ -7,20 +7,6 @@ use Codeburner\Container\Container;
 class ContainerTest extends PHPUnit_Framework_TestCase
 {
 
-	public function testBind()
-	{
-		$container = new Container;
-
-		try {
-			$container->bind('a', 'stdClass');
-		} catch (Exception $e) {
-			$this->fail(sprintf('Container binding exception throwed with error "%s".', $e->getMessage()));
-		}
-	}
-
-	/**
-	 * @depends testBind
-	 */
 	public function testIsBound()
 	{
 		$container = new Container;
@@ -28,9 +14,6 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue($container->isBound('a'));
 	}
 
-	/**
-	 * @depends testBind
-	 */
 	public function testIsResolved()
 	{
 		$container = new Container;
@@ -38,10 +21,6 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue($container->resolved('a'));
 	}
 
-	/**
-	 * @depends testBind
-	 * @depends testIsBound
-	 */
 	public function testFlush()
 	{
 		$container = new Container;
@@ -51,9 +30,6 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertFalse($container->isBound('a'));
 	}
 
-	/**
-	 * @depends testBind
-	 */
 	public function testOffsetGet()
 	{
 		$container = new Container;
@@ -62,7 +38,6 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * @depends testBind
 	 * @depends testOffsetGet
 	 */
 	public function testOffsetSet()
@@ -72,9 +47,6 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(new stdClass, $container['a']);
 	}
 
-	/**
-	 * @depends testBind
-	 */
 	public function testOffsetExists()
 	{
 		$container = new Container;
