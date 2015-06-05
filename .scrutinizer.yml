@@ -20,16 +20,4 @@ checks:
 tools:
     external_code_coverage:
         timeout: 600
-        runs: 4
-    php_code_coverage: false
-    php_code_sniffer:
-        config:
-            standard: PSR4
-        filter:
-            paths: ['src']
-    php_loc:
-        enabled: true
-        excluded_dirs: [vendor, test]
-    php_cpd:
-        enabled: true
-        excluded_dirs: [vendor, test]
+        runs: 3
