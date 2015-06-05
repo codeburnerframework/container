@@ -1,6 +1,6 @@
 <?php
 
-include __DIR__ . '\..\src\Container.php';
+include __DIR__ . '\..\src\container.php';
 
 use Codeburner\Container\Container;
 
