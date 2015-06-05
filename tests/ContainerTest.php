@@ -10,7 +10,12 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	public function testBind()
 	{
 		$container = new Container;
-		$this->assertEquals($container, $container->bind('a', 'StdClass'));
+
+		try {
+			$container->bind('a', 'stdClass');
+		} catch (Exception $e) {
+			$this->fail(sprintf('Container binding exception throwed with error "%s".', $e->getMessage()));
+		}
 	}
 
 	/**
@@ -19,7 +24,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	public function testIsBound()
 	{
 		$container = new Container;
-		$container->bind('a', 'StdClass');
+		$container->bind('a', 'stdClass');
 		$this->assertTrue($container->isBound('a'));
 	}
 
@@ -29,7 +34,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	public function testIsResolved()
 	{
 		$container = new Container;
-		$container->bind('a', 'StdClass', true);
+		$container->bind('a', 'stdClass', true);
 		$this->assertTrue($container->resolved('a'));
 	}
 
@@ -40,7 +45,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	public function testFlush()
 	{
 		$container = new Container;
-		$container->bind('a', 'StdClass');
+		$container->bind('a', 'stdClass');
 		$this->assertTrue($container->isBound('a'));
 		$container->flush();
 		$this->assertFalse($container->isBound('a'));
@@ -52,8 +57,8 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	public function testOffsetGet()
 	{
 		$container = new Container;
-		$container->bind('a', 'StdClass');
-		$this->assertEquals(new StdClass, $container['a']);
+		$container->bind('a', 'stdClass');
+		$this->assertEquals(new stdClass, $container['a']);
 	}
 
 	/**
@@ -63,8 +68,8 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	public function testOffsetSet()
 	{
 		$container = new Container;
-		$container['a'] = 'StdClass';
-		$this->assertEquals(new StdClass, $container['a']);
+		$container['a'] = 'stdClass';
+		$this->assertEquals(new stdClass, $container['a']);
 	}
 
 	/**
@@ -73,7 +78,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	public function testOffsetExists()
 	{
 		$container = new Container;
-		$container->bind('a', 'StdClass');
+		$container->bind('a', 'stdClass');
 		$this->assertTrue(isset($container['a']));
 	}
 
