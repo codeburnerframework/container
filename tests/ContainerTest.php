@@ -1,7 +1,5 @@
 <?php
 
-include __DIR__ . '\..\src\container.php';
-
 use Codeburner\Container\Container;
 
 class ContainerTest extends PHPUnit_Framework_TestCase
