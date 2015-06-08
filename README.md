@@ -19,7 +19,7 @@ add `codeburner/container` to your `composer.json` file.
 ```json
 {
 	"require": {
-		"codeburner/routing": "dev-master"		
+		"codeburner/container": "dev-master"		
 	}
 }
 ```
