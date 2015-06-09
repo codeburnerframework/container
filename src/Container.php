@@ -195,9 +195,10 @@ class Container implements ArrayAccess
 			$this->resolved[$abstract] = $extension($this->resolved[$abstract], $this);
 		} else {
 			if (isset($this->resolvable[$abstract])) {
-				$old = $this->resolvable[$abstract];
-				$this->resolvable[$abstract] = function ($container) use ($old, $extension, $abstract) {
-					return $extension($old($this), $this);
+				$oldResolvableClosure = $this->resolvable[$abstract];
+
+				$this->resolvable[$abstract] = function () use ($oldResolvableClosure, $extension, $abstract) {
+					return $extension($oldResolvableClosure($this), $this);
 				};
 			}
 		}
