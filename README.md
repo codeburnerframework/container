@@ -40,6 +40,7 @@ Don't forget to install or update the composer and include the `vendor/autoload.
 	- [Instances](#instances)
 - [Extending Bindings](#extending-bindings)
 - [Resolving Bindings](#resolving-bindings)
+	- [Setting Dependencies Manually](#setting-dependencies-manually)
 
 ###Basic Usage
 After you have the classes ready to be instantiate, you only need to register the bindings and call then.
@@ -129,12 +130,33 @@ class A {
 }
 
 class B {
-	public function __construct()
-	{
+	public function __construct() {
 		$this->number = rand();
 	}
 }
 
 $a = $container->make('A');
 echo $a->b->number;
+```
+####Setting Dependencies Manually
+Sometimes you want to define that some class will receive a specific object of another class on instantiation.
+```php
+class A {
+	public function __construct(B $b) {
+		$this->b = $b;
+	}
+}
+
+class B {
+	public function __construct() {
+		$this->number = rand();
+	}
+}
+
+$b = new B;
+$b->number = 1;
+
+$container->bindTo('A', 'B', $b);
+$a = $container->make('A');
+echo $a->b->number; // 1
 ```
