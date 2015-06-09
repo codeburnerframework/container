@@ -5,51 +5,157 @@ use Codeburner\Container\Container;
 class ContainerTest extends PHPUnit_Framework_TestCase
 {
 
-	public function testIsBound()
+	public function setUp()
 	{
-		$container = new Container;
-		$container->bind('a', 'stdClass');
-		$this->assertTrue($container->isBound('a'));
+		$this->container = new Container;
+		parent::setUp();
 	}
 
-	public function testIsResolved()
+	public function testMakeClass()
 	{
-		$container = new Container;
-		$container->bind('a', 'stdClass', true);
-		$this->assertTrue($container->resolved('a'));
+		$this->assertInstanceof('stdClass', $this->container->make('stdClass'));
+	}
+
+	public function testMakeSingleton()
+	{
+		$this->container->singleton('a', 'stdClass');
+
+		$this->assertTrue($this->container->make('a') instanceof stdClass && $this->container->make('a') == $this->container->make('a'));
+	}
+
+	public function testMakeInvalid()
+	{
+		$this->setExpectedException('ErrorException');
+
+		try {
+			$this->container->make('SomeClassName');
+		} catch (Exception $e) {
+			throw new ErrorException;
+		}
+	}
+
+	public function testSimpleDependencyInjection()
+	{
+		$obj = $this->container->make('OneDependencyClass');
+
+		$this->assertInstanceof('OneDependencyClass', $obj);
+	}
+
+	public function testMultipleDependencyInjection()
+	{
+		$obj = $this->container->make('TwoDependenciesClass');
+
+		$this->assertInstanceof('TwoDependenciesClass', $obj);
+	}
+
+	public function testBind()
+	{
+		$this->container->bind('a', function ($container) {
+			return 'should work';
+		}, true);
+
+		$this->assertEquals('should work', $this->container['a']);
+	}
+
+	public function testIsBound()
+	{
+		$this->container->bind('a', 'stdClass');
+
+		$this->assertTrue($this->container->isBound('a'));
 	}
 
 	public function testFlush()
 	{
-		$container = new Container;
-		$container->bind('a', 'stdClass');
-		$this->assertTrue($container->isBound('a'));
-		$container->flush();
-		$this->assertFalse($container->isBound('a'));
+		$this->container->bind('a', 'stdClass');
+
+		$this->assertTrue($this->container->isBound('a'));
+
+		$this->container->flush();
+
+		$this->assertFalse($this->container->isBound('a'));
 	}
 
-	public function testOffsetGet()
+	public function testIsResolved()
 	{
-		$container = new Container;
-		$container->bind('a', 'stdClass');
-		$this->assertEquals(new stdClass, $container['a']);
+		$this->container->singleton('a', 'stdClass');
+
+		$this->assertTrue($this->container->resolved('a'));
 	}
 
-	/**
-	 * @depends testOffsetGet
-	 */
-	public function testOffsetSet()
+	public function testBindSingleton()
 	{
-		$container = new Container;
-		$container['a'] = 'stdClass';
-		$this->assertEquals(new stdClass, $container['a']);
+		$this->container->bind('a', 'stdClass', true);
+
+		$this->assertTrue($this->container->resolved('a'));
 	}
 
-	public function testOffsetExists()
+	public function testSingleton()
 	{
-		$container = new Container;
-		$container->bind('a', 'stdClass');
-		$this->assertTrue(isset($container['a']));
+		$this->container->singleton('b', 'stdClass');
+
+		$this->assertTrue($this->container->resolved('b'));
+	}
+
+	public function testBindIf()
+	{
+		$this->container->bind('a', 'stdClass');
+
+		$this->container->bind('a', 'stdClass', true);
+
+		$this->assertTrue($this->container->resolved('a'));
+	}
+
+	public function testBindInstance()
+	{
+		$instance = new stdClass;
+		
+		$instance->test = 'should work';
+
+		$this->container->instance('a', $instance);
+
+		$this->assertEquals('should work', $this->container['a']->test);
+	}
+
+	public function testBindTo()
+	{
+		$instance = new stdClass;
+		
+		$instance->test = 'should work';
+
+		$this->container->bindTo('OneDependencyClass', 'stdClass', $instance);
+
+		$instance = $this->container->make('OneDependencyClass');
+
+		$this->assertTrue(property_exists($instance->std, 'test'));
+	}
+
+	public function testExtend()
+	{
+		$this->container->bind('a', 'stdClass');
+
+		$this->container->extend('a', function ($stdClass, $container) {
+			$stdClass->test = 'should work';
+
+			return $stdClass;
+		});
+
+		$this->assertTrue(property_exists($this->container['a'], 'test'));
+	}
+
+	public function testShare()
+	{
+		$this->container->bind('a', 'stdClass');
+
+		$this->container->share('a');
+
+		$this->assertTrue($this->container->resolved('a'));
+	}
+
+	public function testMakeBinding()
+	{
+		$this->container->bind('a', 'stdClass');
+
+		$this->assertInstanceof('stdClass', $this->container->make('a'));
 	}
 
 }

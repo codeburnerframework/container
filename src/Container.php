@@ -131,8 +131,16 @@ class Container implements ArrayAccess
 	 */
 	public function bindTo($class, $dependency, $abstract)
 	{
-		if ($this->isBound($abstract)) {
-			$abstract = $this->offsetGet($abstract);
+		if (is_string($abstract)) {
+			$abstract = function () use ($abstract) {
+				return $this->make($abstract);
+			};
+		} else {
+			if (is_object($abstract)) {
+				$abstract = function () use ($abstract) {
+					return $abstract;
+				};
+			}
 		}
 
 		$this->dependencies[$class][$dependency] = $abstract;
@@ -187,7 +195,10 @@ class Container implements ArrayAccess
 			$this->resolved[$abstract] = $extension($this->resolved[$abstract], $this);
 		} else {
 			if (isset($this->resolvable[$abstract])) {
-				$this->resolvable[$abstract] = $extension($this->resolvable[$abstract]($this), $this);
+				$old = $this->resolvable[$abstract];
+				$this->resolvable[$abstract] = function ($container) use ($old, $extension, $abstract) {
+					return $extension($old($this), $this);
+				};
 			}
 		}
 
@@ -246,7 +257,7 @@ class Container implements ArrayAccess
 
 					if ($class !== null) {
 						if (isset($this->dependencies[$abstract]) && isset($this->dependencies[$abstract][$class->name])) {
-							   $parameters[] = $this->dependencies[$abstract][$class->name];
+							   $parameters[] = $this->dependencies[$abstract][$class->name]();
 						} else $parameters[] = $this->make($class->name);
 					}
 				}
