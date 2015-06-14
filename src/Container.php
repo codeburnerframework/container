@@ -145,11 +145,12 @@ class Container implements ArrayAccess
     public function bindTo($class, $dependency, $abstract)
     {
         if (is_string($abstract)) {
-            $abstract = function () use ($abstract) {
-                return $this->make($abstract);
+            $classname = $abstract;
+            $abstract = function () use ($classname) {
+                return $this->offsetGet($classname);
             };
         } else {
-            if (is_object($abstract)) {
+            if (!$abstract instanceof Closure) {
                 $abstract = function () use ($abstract) {
                     return $abstract;
                 };
@@ -256,19 +257,33 @@ class Container implements ArrayAccess
             return $this->resolving[$abstract]($abstract, $parameters);
         }
 
+        $this->resolving[$abstract] = $this->construct($abstract, $parameters, $force);
+        return $this->resolving[$abstract]($abstract, $parameters);
+    }
+
+    /**
+     * Construct a class and all the dependencies using the reflection library of PHP.
+     *
+     * @param string $abstract   The class name or container element name to make.
+     * @param array  $parameters Specific parameters definition.
+     * @param bool   $force      Specify if a new element must be given and the dependencies must have be recalculated.
+     *
+     * @throws ReflectionException
+     * @return Closure
+     */
+    protected function construct($abstract, $parameters, $force)
+    {
         $inspector = new ReflectionClass($abstract);
         $constructor = $inspector->getConstructor();
         $dependencies = $constructor ? $constructor->getParameters() : [];
 
-        $this->resolving[$abstract] = function ($abstract, $parameters) use ($inspector, $dependencies, $force) {
+        return function ($abstract, $parameters) use ($inspector, $dependencies, $force) {
             if (empty($dependencies)) {
                 return new $abstract;
             }
 
             return $inspector->newInstanceArgs($parameters ?: $this->resolve($abstract, $dependencies, $force));
         };
-
-        return $this->resolving[$abstract]($abstract, $parameters);
     }
 
     /**
@@ -282,6 +297,10 @@ class Container implements ArrayAccess
      */
     protected function resolve($abstract, $dependencies, $force)
     {
+        if (empty($dependencies)) {
+            return [];
+        }
+
         $parameters = [];
 
         if (!isset($this->cached[$abstract]) || $force === true) {
@@ -289,7 +308,7 @@ class Container implements ArrayAccess
         }
 
         foreach ($this->cached[$abstract] as $dependency) {
-            $parameters[] = $dependency();
+            $parameters[] = $dependency($this);
         }
 
         return $parameters;
@@ -311,13 +330,15 @@ class Container implements ArrayAccess
             $class = $dependency->getClass();
 
             if ($class !== null) {
-                if (isset($this->dependencies[$abstract]) && isset($this->dependencies[$abstract][$class->name])) {
-                    $parameters[] = function () use ($class, $abstract) {
-                        return $this->dependencies[$abstract][$class->name]();
+                $classname = $class->name;
+                
+                if (isset($this->dependencies[$abstract]) && isset($this->dependencies[$abstract][$classname])) {
+                    $parameters[] = function () use ($classname, $abstract) {
+                        return $this->dependencies[$abstract][$classname]();
                     };
                 } else {
-                    $parameters[] = function () use ($class) {
-                        return $this->make($class->name);
+                    $parameters[] = function () use ($classname) {
+                        return $this->make($classname);
                     };
                 }
             }
@@ -412,6 +433,17 @@ class Container implements ArrayAccess
     public function __unset($offset)
     {
         $this->offsetUnset(str_replace('_', '.', $offset));
+    }
+
+    /**
+     * For an class attribute access method
+     *
+     * @see http://php.net/manual/en/language.oop5.magic.php
+     * @return object|null
+     */
+    public function __isset($offset)
+    {
+        return $this->offsetExists(str_replace('_', '.', $offset));
     }
 
 }

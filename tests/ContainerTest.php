@@ -56,6 +56,39 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue($a->dac->number != $b->dac->number);
 	}
 
+	public function testGetNonExistentBinding()
+	{
+		$this->assertInstanceof('TwoDependenciesClass', $this->container['TwoDependenciesClass']);
+
+		$this->assertInstanceof('OneDependencyClass', $this->container->OneDependencyClass);
+	}
+
+	public function testArrayAccessMethods()
+	{
+		$this->container['test'] = new stdClass;
+
+		$this->container['test']->someAttribute = 'test case';
+		
+		$this->assertTrue(isset($this->container['test']));
+		
+		unset($this->container['test']);
+		
+		$this->assertFalse(isset($this->container['test']));
+	}
+
+	public function testMagicAccessMethods()
+	{
+		$this->container->test = new stdClass;
+
+		$this->container->test->someAttribute = 'test case';
+		
+		$this->assertTrue(isset($this->container->test));
+		
+		unset($this->container->test);
+		
+		$this->assertFalse(isset($this->container->test));
+	}
+
 	public function testBind()
 	{
 		$this->container->bind('a', function ($container) {
@@ -124,7 +157,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('should work', $this->container['a']->test);
 	}
 
-	public function testBindTo()
+	public function testBindToResolved()
 	{
 		$instance = new stdClass;
 		
@@ -137,9 +170,44 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(property_exists($instance->std, 'test'));
 	}
 
-	public function testExtend()
+	public function testBindToResolvableClosure()
+	{
+
+		$this->container->bindTo('OneDependencyClass', 'stdClass', function () {
+			$instance = new stdClass;
+			$instance->test = 'should work';
+
+			return $instance;		
+		});
+
+		$instance = $this->container->make('OneDependencyClass');
+
+		$this->assertTrue(property_exists($instance->std, 'test'));
+	}
+
+	public function testBindToResolvableString()
+	{
+		$this->container->bindTo('OneDependencyClass', 'stdClass', 'stdClass');
+
+		$this->assertInstanceof('OneDependencyClass', $this->container->make('OneDependencyClass'));
+	}
+
+	public function testExtendResolvable()
 	{
 		$this->container->bind('a', 'stdClass');
+
+		$this->container->extend('a', function ($stdClass, $container) {
+			$stdClass->test = 'should work';
+
+			return $stdClass;
+		});
+
+		$this->assertTrue(property_exists($this->container['a'], 'test'));
+	}
+
+	public function testExtendResolved()
+	{
+		$this->container->bind('a', 'stdClass', true);
 
 		$this->container->extend('a', function ($stdClass, $container) {
 			$stdClass->test = 'should work';
