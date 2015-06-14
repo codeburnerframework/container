@@ -13,6 +13,22 @@ class OneDependencyClass
 {
 	public function __construct(stdClass $a)
 	{
-		$this->std = $a;	
+		$this->std = $a;
 	}
+}
+
+class DinamicAttributeClass
+{
+    public function __construct()
+    {
+        $this->number = rand() + rand();
+    }
+}
+
+class DinamicAttributeDependencyClass
+{
+    public function __construct(DinamicAttributeClass $dac)
+    {
+        $this->dac = $dac;
+    }
 }

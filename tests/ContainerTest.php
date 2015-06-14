@@ -48,6 +48,14 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertInstanceof('TwoDependenciesClass', $obj);
 	}
 
+	public function testNotSingletonDependenciesResolution()
+	{
+		$a = $this->container->make('DinamicAttributeDependencyClass', [], true);
+		$b = $this->container->make('DinamicAttributeDependencyClass', [], true);
+
+		$this->assertTrue($a->dac->number != $b->dac->number);
+	}
+
 	public function testBind()
 	{
 		$this->container->bind('a', function ($container) {
@@ -79,21 +87,21 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	{
 		$this->container->singleton('a', 'stdClass');
 
-		$this->assertTrue($this->container->resolved('a'));
+		$this->assertTrue($this->container->isResolved('a'));
 	}
 
 	public function testBindSingleton()
 	{
 		$this->container->bind('a', 'stdClass', true);
 
-		$this->assertTrue($this->container->resolved('a'));
+		$this->assertTrue($this->container->isResolved('a'));
 	}
 
 	public function testSingleton()
 	{
 		$this->container->singleton('b', 'stdClass');
 
-		$this->assertTrue($this->container->resolved('b'));
+		$this->assertTrue($this->container->isResolved('b'));
 	}
 
 	public function testBindIf()
@@ -102,7 +110,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
 		$this->container->bind('a', 'stdClass', true);
 
-		$this->assertTrue($this->container->resolved('a'));
+		$this->assertTrue($this->container->isResolved('a'));
 	}
 
 	public function testBindInstance()
@@ -148,7 +156,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
 		$this->container->share('a');
 
-		$this->assertTrue($this->container->resolved('a'));
+		$this->assertTrue($this->container->isResolved('a'));
 	}
 
 	public function testMakeBinding()
