@@ -377,13 +377,8 @@ class Container implements ArrayAccess
      */
     public function offsetUnset($offset)
     {
-        if (isset($this->resolved[$offset])) {
-            unset($this->resolved[$offset]);
-        } else {
-            if (isset($this->resolvable[$offset])) {
-                unset($this->resolvable[$offset]);
-            }
-        }
+        unset($this->resolved[$offset]);
+        unset($this->resolvable[$offset]);
     }
 
     /**
