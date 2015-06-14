@@ -1,9 +1,9 @@
 # Codeburner IoC Container System
 
 [![Build Status](https://img.shields.io/travis/codeburnerframework/container/master.svg)](https://travis-ci.org/codeburnerframework/container)
+[![Code Coverage](https://scrutinizer-ci.com/g/codeburnerframework/container/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/codeburnerframework/container/?branch=master)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
 [![Quality Score](https://img.shields.io/scrutinizer/g/codeburnerframework/container.svg)](https://scrutinizer-ci.com/g/codeburnerframework/container)
-[![Code Coverage](https://scrutinizer-ci.com/g/codeburnerframework/container/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/codeburnerframework/container/?branch=master)
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/9af2c429-cc7f-4c71-8eac-e3c3ddd4c1d2/big.png)](https://insight.sensiolabs.com/projects/9af2c429-cc7f-4c71-8eac-e3c3ddd4c1d2)
 
