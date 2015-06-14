@@ -257,7 +257,7 @@ class Container implements ArrayAccess
             return $this->resolving[$abstract]($abstract, $parameters);
         }
 
-        $this->resolving[$abstract] = $this->construct($abstract, $parameters, $force);
+        $this->resolving[$abstract] = $this->construct($abstract, $force);
         return $this->resolving[$abstract]($abstract, $parameters);
     }
 
@@ -271,7 +271,7 @@ class Container implements ArrayAccess
      * @throws ReflectionException
      * @return Closure
      */
-    protected function construct($abstract, $parameters, $force)
+    protected function construct($abstract, $force)
     {
         $inspector = new ReflectionClass($abstract);
         $constructor = $inspector->getConstructor();
