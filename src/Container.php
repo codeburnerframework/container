@@ -210,7 +210,7 @@ class Container implements ArrayAccess
             if (isset($this->resolvable[$abstract])) {
                 $oldResolvableClosure = $this->resolvable[$abstract];
 
-                $this->resolvable[$abstract] = function () use ($oldResolvableClosure, $extension, $abstract) {
+                $this->resolvable[$abstract] = function () use ($oldResolvableClosure, $extension) {
                     return $extension($oldResolvableClosure($this), $this);
                 };
             }
