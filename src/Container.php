@@ -297,10 +297,6 @@ class Container implements ArrayAccess
      */
     protected function resolve($abstract, $dependencies, $force)
     {
-        if (empty($dependencies)) {
-            return [];
-        }
-
         $parameters = [];
 
         if (!isset($this->cached[$abstract]) || $force === true) {
