@@ -139,9 +139,9 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
 	public function testBindIf()
 	{
-		$this->container->bind('a', 'stdClass');
+		$this->container->bindIf('a', 'stdClass');
 
-		$this->container->bind('a', 'stdClass', true);
+		$this->container->bindIf('a', 'stdClass', true);
 
 		$this->assertTrue($this->container->isResolved('a'));
 	}
