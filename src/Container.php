@@ -264,9 +264,8 @@ class Container implements ArrayAccess
     /**
      * Construct a class and all the dependencies using the reflection library of PHP.
      *
-     * @param string $abstract   The class name or container element name to make.
-     * @param array  $parameters Specific parameters definition.
-     * @param bool   $force      Specify if a new element must be given and the dependencies must have be recalculated.
+     * @param string $abstract The class name or container element name to make.
+     * @param bool   $force    Specify if a new element must be given and the dependencies must have be recalculated.
      *
      * @throws ReflectionException
      * @return Closure
