@@ -22,14 +22,14 @@ interface ContainerAwareInterface
     /**
      * Inject the container instance into the class.
      *
-     * @param Codeburner\Container\Container $container
+     * @param \Codeburner\Container\Container $container
      */
     public function setContainer(Container $container);
 
     /**
      * get the container instance.
      *
-     * @return Codeburner\Container\Container $container
+     * @return \Codeburner\Container\Container $container
      */
     public function getContainer();
 
