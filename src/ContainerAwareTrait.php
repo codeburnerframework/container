@@ -22,14 +22,14 @@ trait ContainerAwareTrait
     /**
      * The instance of container.
      *
-     * @var Codeburner\Container\Container
+     * @var \Codeburner\Container\Container
      */
     protected $container;
 
     /**
      * Set a container.
      *
-     * @param  Codeburner\Container\Container $container
+     * @param \Codeburner\Container\Container $container
      * @return mixed
      */
     public function setContainer(Container $container)
@@ -42,7 +42,7 @@ trait ContainerAwareTrait
     /**
      * Get the container.
      *
-     * @return Codeburner\Container\Container
+     * @return \Codeburner\Container\Container
      */
     public function getContainer()
     {
