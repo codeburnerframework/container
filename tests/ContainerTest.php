@@ -1,13 +1,11 @@
 <?php
 
-use Codeburner\Container\Container;
-
 class ContainerTest extends PHPUnit_Framework_TestCase
 {
 
 	public function setUp()
 	{
-		$this->container = new Container;
+		$this->container = new Codeburner\Container\Container;
 		parent::setUp();
 	}
 
@@ -234,4 +232,13 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertInstanceof('stdClass', $this->container->make('a'));
 	}
 
+	public function testContainerAware()
+	{
+		$instance = $this->container->make('ContainerAwareClass');
+		
+		$instance->setContainer($this->container);
+
+		$this->assertInstanceof('Codeburner\Container\Container', $instance->getContainer());
+	}
+	
 }

@@ -412,7 +412,7 @@ class Container implements ArrayAccess
      * For an class attribute access method
      *
      * @see http://php.net/manual/en/language.oop5.magic.php
-     * @return object|null
+     * @return null
      */
     public function __set($offset, $value)
     {
@@ -423,7 +423,7 @@ class Container implements ArrayAccess
      * For an class attribute access method
      *
      * @see http://php.net/manual/en/language.oop5.magic.php
-     * @return object|null
+     * @return null
      */
     public function __unset($offset)
     {

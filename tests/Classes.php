@@ -32,3 +32,8 @@ class DinamicAttributeDependencyClass
         $this->dac = $dac;
     }
 }
+
+class ContainerAwareClass
+{
+    use Codeburner\Container\ContainerAwareTrait;
+}
