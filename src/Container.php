@@ -98,7 +98,7 @@ class Container implements ArrayAccess
      * @param string|closure $concrete The element class name, or an closure that makes the element.
      * @param bool           $shared   Define if the element will be a singleton instance.
      *
-     * @return Codeburner\Container\Container
+     * @return \Codeburner\Container\Container
      */
     public function bind($abstract, $concrete, $shared = false)
     {
@@ -122,7 +122,7 @@ class Container implements ArrayAccess
      * @param string|closure $concrete The element class name, or an closure that makes the element.
      * @param bool           $shared   Define if the element will be a singleton instance.
      *
-     * @return Codeburner\Container\Container
+     * @return \Codeburner\Container\Container
      */
     public function bindIf($abstract, $concrete, $shared = false)
     {
@@ -140,7 +140,7 @@ class Container implements ArrayAccess
      * @param string         $dependency The dependency full name.
      * @param string|closure $abstract   The specific object class name or a classure that makes the element.
      *
-     * @return Codeburner\Container\Container
+     * @return \Codeburner\Container\Container
      */
     public function bindTo($class, $dependency, $abstract)
     {
@@ -169,7 +169,7 @@ class Container implements ArrayAccess
      * @param string         $abstract The alias name that will be used to call the element.
      * @param string|closure $concrete The element class name, or an closure that makes the element.
      *
-     * @return Codeburner\Container\Container
+     * @return \Codeburner\Container\Container
      */
     public function singleton($abstract, $concrete)
     {
@@ -184,7 +184,7 @@ class Container implements ArrayAccess
      * @param string $abstract The alias name that will be used to call the object.
      * @param object $instance The object that will be inserted.
      *
-     * @return Codeburner\Container\Container
+     * @return \Codeburner\Container\Container
      */ 
     public function instance($abstract, $instance)
     {
@@ -201,7 +201,7 @@ class Container implements ArrayAccess
      * @param string  $abstract  The alias name that will be used to call the element.
      * @param closure $extension The function that receives the old element and return a new or modified one.
      *
-     * @return Codeburner\Container\Container
+     * @return \Codeburner\Container\Container
      */
     public function extend($abstract, $extension)
     {
@@ -225,7 +225,7 @@ class Container implements ArrayAccess
      *
      * @param string $abstract The alias name that will be used to call the element.
      *
-     * @return Codeburner\Container\Container
+     * @return \Codeburner\Container\Container
      */
     public function share($abstract)
     {
@@ -434,7 +434,7 @@ class Container implements ArrayAccess
      * For an class attribute access method
      *
      * @see http://php.net/manual/en/language.oop5.magic.php
-     * @return object|null
+     * @return bool
      */
     public function __isset($offset)
     {
