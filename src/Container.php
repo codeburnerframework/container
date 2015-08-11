@@ -336,8 +336,6 @@ class Container implements ArrayAccess
      */
     protected function resolve($abstract, $dependency, $force)
     {
-        $parameters = [];
-
         if (!isset($this->cached[$abstract][$dependency->name]) || $force === true) {
             $this->cached[$abstract][$dependency->name] = $this->generate($abstract, $dependency);
         }
