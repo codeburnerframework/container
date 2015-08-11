@@ -240,5 +240,29 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
 		$this->assertInstanceof('Codeburner\Container\Container', $instance->getContainer());
 	}
+
+	public function testCallFunction()
+	{
+		$this->assertTrue($this->container->call(function () {
+			return true;
+		}));
+	}
+
+	public function testCallFunctionWithDependencies()
+	{
+		$this->assertTrue($this->container->call(function (TwoDependenciesClass $b) {
+			return isset($b->odc) && isset($b->std);
+		}));
+	}
+
+	public function testForcedDependency()
+	{
+		$test = new stdClass;
+		$test->test = true;
+
+		$this->assertTrue($this->container->call(function (stdClass $std) {
+			return isset($std->test);
+		}, ['std' => $test]));
+	}
 	
 }

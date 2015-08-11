@@ -12,6 +12,7 @@ namespace Codeburner\Container;
 
 use ArrayAccess;
 use ReflectionClass;
+use ReflectionFunction;
 use Closure;
 
 /**
@@ -238,6 +239,35 @@ class Container implements ArrayAccess
     }
 
     /**
+     * Call a user function injecting the dependencies.
+     *
+     * @param string|Closure $abstract   The function or the user function name.
+     * @param array          $parameters The predefined dependencies.
+     *
+     * @return mixed
+     */
+    public function call($abstract, $parameters = [], $merge = false)
+    {
+        $inspector = new ReflectionFunction($abstract);
+        $dependencies = $inspector->getParameters();
+        $resolvedClosureDependencies = [];
+
+        foreach ($dependencies as $dependency) {
+            if (isset($parameters[$dependency->name])) {
+                $resolvedClosureDependencies[] = $parameters[$dependency->name];
+            } else {
+                if (($class = $dependency->getClass()) === null) {
+                    $resolvedClosureDependencies[] = $dependency->isOptional() ? $dependency->getDefaultValue() : null;
+                } else {
+                    $resolvedClosureDependencies[] = $this->make($class->name);
+                }
+            }
+        }
+
+        return call_user_func_array($abstract, $resolvedClosureDependencies);
+    }
+
+    /**
      * Makes an element or class injecting automatically all the dependencies.
      *
      * @param string $abstract   The class name or container element name to make.
@@ -281,65 +311,69 @@ class Container implements ArrayAccess
                 return new $abstract;
             }
 
-            return $inspector->newInstanceArgs($parameters ?: $this->resolve($abstract, $dependencies, $force));
+            $resolvedClassParameters = [];
+
+            foreach ($dependencies as $dependency) {
+                if (isset($parameters[$dependency->name])) {
+                    $resolvedClassParameters[] = $parameters[$dependency->name];
+                } else {
+                    $resolvedClassParameters[] = $this->resolve($abstract, $dependency, $force);
+                }
+            }
+
+            return $inspector->newInstanceArgs($resolvedClassParameters);
         };
     }
 
     /**
      * Resolve all the given class reflected dependencies.
      *
-     * @param string $abstract     The class name or container element name to resolve dependencies.
-     * @param array  $dependencies The list of ReflectionParameter of a class.
-     * @param bool   $force        Specify if the dependencies must be recalculated.
+     * @param string               $abstract   The class name or container element name to resolve dependencies.
+     * @param ReflectionParameter  $dependency The class dependency to be resolved.
+     * @param bool                 $force      Specify if the dependencies must be recalculated.
      *
-     * @return array
+     * @return Object
      */
-    protected function resolve($abstract, $dependencies, $force)
+    protected function resolve($abstract, $dependency, $force)
     {
         $parameters = [];
 
-        if (!isset($this->cached[$abstract]) || $force === true) {
-            $this->cached[$abstract] = $this->generate($abstract, $dependencies);
+        if (!isset($this->cached[$abstract][$dependency->name]) || $force === true) {
+            $this->cached[$abstract][$dependency->name] = $this->generate($abstract, $dependency);
         }
 
-        foreach ($this->cached[$abstract] as $dependency) {
-            $parameters[] = $dependency($this);
-        }
-
-        return $parameters;
+        return $this->cached[$abstract][$dependency->name]($this);
     }
 
     /**
      * Generate the dependencies callbacks to jump some conditions in every dependency creation.
      *
-     * @param string $abstract     The class name or container element name to resolve dependencies.
-     * @param array  $dependencies The list of ReflectionParameter of a class.
+     * @param string               $abstract   The class name or container element name to resolve dependencies.
+     * @param ReflectionParameter  $dependency The class dependency to be resolved.
      *
-     * @return array
+     * @return Closure
      */
-    protected function generate($abstract, $dependencies)
+    protected function generate($abstract, $dependency)
     {
-        $parameters = [];
+        $class = $dependency->getClass();
 
-        foreach ($dependencies as $dependency) {
-            $class = $dependency->getClass();
-
-            if ($class !== null) {
-                $classname = $class->name;
-                
-                if (isset($this->dependencies[$abstract]) && isset($this->dependencies[$abstract][$classname])) {
-                    $parameters[] = function () use ($classname, $abstract) {
-                        return $this->dependencies[$abstract][$classname]();
-                    };
-                } else {
-                    $parameters[] = function () use ($classname) {
-                        return $this->make($classname);
-                    };
-                }
+        if ($class !== null) {
+            $classname = $class->name;
+            
+            if (isset($this->dependencies[$abstract]) && isset($this->dependencies[$abstract][$classname])) {
+                return function () use ($classname, $abstract) {
+                    return $this->dependencies[$abstract][$classname]();
+                };
+            } else {
+                return function () use ($classname) {
+                    return $this->make($classname);
+                };
             }
+        } else {
+            return function () use ($class) {
+                return $class->getDefaultValue();
+            };
         }
-
-        return $parameters;
     }
 
     /**

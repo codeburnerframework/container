@@ -3,6 +3,9 @@
 	"description": "The faster IoC Container ever seen.",
 	"keywords": ["container", "IoC", "codeburner"],
 	"license": "MIT",
+	"require": {
+		"php": ">=5.4.0"
+	},
 	"authors": [
 		{
 			"name": "Alex Rohleder",
