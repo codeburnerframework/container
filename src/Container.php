@@ -391,9 +391,15 @@ trait ContainerAbstractionMethods
     public function bindTo($class, $dependencyName, $dependency)
     {
         if ($dependency instanceof Closure === false) {
-            $dependency = function () use ($dependency) {
-                return $this->offsetGet($dependency);
-            };
+            if (is_object($dependency)) {
+                $dependency = function () use ($dependency) {
+                    return $dependency;
+                };
+            } else { 
+                $dependency = function () use ($dependency) {
+                    return $this->offsetGet($dependency);
+                };
+            }
         }
 
         $this->dependencies[$class.$dependencyName] = $dependency;
