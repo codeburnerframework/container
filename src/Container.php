@@ -1,9 +1,9 @@
-<?php
+<?php 
 
 /**
  * Codeburner Framework.
  *
- * @author Alex Rohleder <alexrohleder96@outlook.com>
+ * @author Alex Rohleder <contato@alexrohleder.com.br>
  * @copyright 2015 Alex Rohleder
  * @license http://opensource.org/licenses/MIT
  */
@@ -16,239 +16,74 @@ use ReflectionFunction;
 use Closure;
 
 /**
- * Codeburner Container Component.
- *
- * @author Alex Rohleder <alexrohleder96@outlook.com>
- * @see https://github.com/codeburnerframework/container
+ * The container class is reponsable to construct all objects
+ * of the project automatically, with total abstraction of dependencies.
+ * 
+ * @author Alex Rohleder <contato@alexrohleder.com.br>
+ * @since 1.0.0
  */
+
 class Container implements ArrayAccess
 {
 
     /**
-     * Holds all the resolved instances (singletons).
-     *
-     * @var array
+     * Implement all basic manipulation methods, including the ArrayAccess interface methods
+     * and all the magic acessor methods as __get or __set.
      */
-    protected $resolved = [];
+
+    use ContainerCollectionMethods;
 
     /**
-     * All the resolvable callbacks.
-     *
-     * @var array
+     * Implement all abstraction method, such bind, bindIf, bindTo, share, extends,
+     * isBound, isSingleton, flush.
      */
-    protected $resolvable = [];
+
+    use ContainerAbstractionMethods;
 
     /**
-     * Cache of classes inspector and resolver.
+     * Holds all resolved or resolvable instances into the container.
      *
      * @var array
      */
-    protected $resolving = [];
+
+    protected $collection;
 
     /**
      * Class specific defined dependencies.
      *
      * @var array
      */
-    protected $dependencies = [];
+
+    protected $dependencies;
+
+    /**
+     * Cache of classes inspector and resolver.
+     *
+     * @var array
+     */
+
+    protected $resolving;
 
     /**
      * Cache of classes dependencies in callbacks ready for resolution.
      *
      * @var array
      */
-    protected $cached = [];
 
-    /**
-     * Verify if an element exists in container.
-     *
-     * @return bool
-     */
-    public function isBound($abstract)
-    {
-        return isset($this->resolved[$abstract]) || isset($this->resolvable[$abstract]);
-    }
-
-    /**
-     * Verify if an element has a singleton instance.
-     *
-     * @return bool
-     */
-    public function isResolved($abstract)
-    {
-        return isset($this->resolved[$abstract]);
-    }
-
-    /**
-     * Reset the container, removing all the elements, cache and options.
-     *
-     * @return void
-     */
-    public function flush()
-    {
-        $this->resolved = [];
-        $this->resolvable = [];
-        $this->dependencies = [];
-        $this->cached = [];
-    }
-
-    /**
-     * Bind a new element to the container.
-     *
-     * @param string         $abstract The alias name that will be used to call the element.
-     * @param string|closure $concrete The element class name, or an closure that makes the element.
-     * @param bool           $shared   Define if the element will be a singleton instance.
-     *
-     * @return \Codeburner\Container\Container
-     */
-    public function bind($abstract, $concrete, $shared = false)
-    {
-        if (!$concrete instanceof Closure) {
-            $concrete = function (Container $container) use ($concrete) {
-                return $container->make($concrete);
-            };
-        }
-
-        if ($shared === true) {
-               $this->resolved[$abstract]   = $concrete($this);
-        } else $this->resolvable[$abstract] = $concrete;
-
-        return $this;
-    }
-
-    /**
-     * Bind a new element to the container IF the element name not exists in the container.
-     *
-     * @param string         $abstract The alias name that will be used to call the element.
-     * @param string|closure $concrete The element class name, or an closure that makes the element.
-     * @param bool           $shared   Define if the element will be a singleton instance.
-     *
-     * @return \Codeburner\Container\Container
-     */
-    public function bindIf($abstract, $concrete, $shared = false)
-    {
-        if (!isset($this->resolved[$abstract]) || !isset($this->resolvable[$abstract])) {
-            $this->bind($abstract, $concrete, $shared);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Bind an specific instance to a class dependency.
-     *
-     * @param string         $class      The class full name.
-     * @param string         $dependency The dependency full name.
-     * @param string|closure $abstract   The specific object class name or a classure that makes the element.
-     *
-     * @return \Codeburner\Container\Container
-     */
-    public function bindTo($class, $dependency, $abstract)
-    {
-        if (is_string($abstract)) {
-            $classname = $abstract;
-            $abstract = function () use ($classname) {
-                return $this->offsetGet($classname);
-            };
-        } else {
-            if (!$abstract instanceof Closure) {
-                $abstract = function () use ($abstract) {
-                    return $abstract;
-                };
-            }
-        }
-
-        $this->dependencies[$class][$dependency] = $abstract;
-
-        return $this;
-    }
-
-    /**
-     * Bind an element that will be construct only one time, and every call for the element,
-     * the same instance will be given.
-     *
-     * @param string         $abstract The alias name that will be used to call the element.
-     * @param string|closure $concrete The element class name, or an closure that makes the element.
-     *
-     * @return \Codeburner\Container\Container
-     */
-    public function singleton($abstract, $concrete)
-    {
-        $this->bind($abstract, $concrete, true);
-
-        return $this;
-    }
-
-    /**
-     * Bind an object to the container.
-     *
-     * @param string $abstract The alias name that will be used to call the object.
-     * @param object $instance The object that will be inserted.
-     *
-     * @return \Codeburner\Container\Container
-     */ 
-    public function instance($abstract, $instance)
-    {
-        if (is_object($instance)) {
-            $this->resolved[$abstract] = $instance;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Modify an element with a given function that receive the old element as argument.
-     *
-     * @param string  $abstract  The alias name that will be used to call the element.
-     * @param closure $extension The function that receives the old element and return a new or modified one.
-     *
-     * @return \Codeburner\Container\Container
-     */
-    public function extend($abstract, $extension)
-    {
-        if (isset($this->resolved[$abstract])) {
-            $this->resolved[$abstract] = $extension($this->resolved[$abstract], $this);
-        } else {
-            if (isset($this->resolvable[$abstract])) {
-                $oldResolvableClosure = $this->resolvable[$abstract];
-
-                $this->resolvable[$abstract] = function () use ($oldResolvableClosure, $extension) {
-                    return $extension($oldResolvableClosure($this), $this);
-                };
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * Makes an resolvable element an singleton.
-     *
-     * @param string $abstract The alias name that will be used to call the element.
-     *
-     * @return \Codeburner\Container\Container
-     */
-    public function share($abstract)
-    {
-        if (isset($this->resolvable[$abstract])) {
-            $this->resolved[$abstract] = $this->resolvable[$abstract]($this);
-            unset($this->resolvable[$abstract]);
-        }
-
-        return $this;
-    }
+    protected $resolved;
 
     /**
      * Call a user function injecting the dependencies.
      *
-     * @param string|Closure $abstract   The function or the user function name.
+     * @param string|Closure $function   The function or the user function name.
      * @param array          $parameters The predefined dependencies.
      *
      * @return mixed
      */
-    public function call($abstract, $parameters = [], $merge = false)
+
+    public function call($function, $parameters = [])
     {
-        $inspector = new ReflectionFunction($abstract);
+        $inspector = new ReflectionFunction($function);
         $dependencies = $inspector->getParameters();
         $resolvedClosureDependencies = [];
 
@@ -257,10 +92,8 @@ class Container implements ArrayAccess
                 $resolvedClosureDependencies[] = $parameters[$dependency->name];
             } else {
                 if (($class = $dependency->getClass()) === null) {
-                    $resolvedClosureDependencies[] = $dependency->isOptional() ? $dependency->getDefaultValue() : null;
-                } else {
-                    $resolvedClosureDependencies[] = $this->make($class->name);
-                }
+                       $resolvedClosureDependencies[] = $dependency->isOptional() ? $dependency->getDefaultValue() : null;
+                } else $resolvedClosureDependencies[] = $this->make($class->name);
             }
         }
 
@@ -277,9 +110,10 @@ class Container implements ArrayAccess
      * @throws ReflectionException
      * @return object|null
      */
+
     public function make($abstract, $parameters = [], $force = false)
     {
-        if ($force === false && $this->isBound($abstract)) {
+        if ($force === false && isset($this->collection[$abstract])) {
             return $this->offsetGet($abstract);
         }
 
@@ -287,8 +121,8 @@ class Container implements ArrayAccess
             return $this->resolving[$abstract]($abstract, $parameters);
         }
 
-        $this->resolving[$abstract] = $this->construct($abstract, $force);
-        return $this->resolving[$abstract]($abstract, $parameters);
+        $callable = $this->resolving[$abstract] = $this->construct($abstract, $force);
+        return $callable($abstract, $parameters);
     }
 
     /**
@@ -300,28 +134,29 @@ class Container implements ArrayAccess
      * @throws ReflectionException
      * @return Closure
      */
+
     protected function construct($abstract, $force)
     {
         $inspector = new ReflectionClass($abstract);
-        $constructor = $inspector->getConstructor();
-        $dependencies = $constructor ? $constructor->getParameters() : [];
 
-        return function ($abstract, $parameters) use ($inspector, $dependencies, $force) {
-            if (empty($dependencies)) {
-                return new $abstract;
-            }
+        if ($constructor  = $inspector->getConstructor()) {
+            $dependencies = $constructor->getParameters();
 
-            $resolvedClassParameters = [];
+            return function ($abstract, $parameters) use ($inspector, $dependencies, $force) {
+                $resolvedClassParameters = [];
 
-            foreach ($dependencies as $dependency) {
-                if (isset($parameters[$dependency->name])) {
-                    $resolvedClassParameters[] = $parameters[$dependency->name];
-                } else {
-                    $resolvedClassParameters[] = $this->resolve($abstract, $dependency, $force);
+                foreach ($dependencies as $dependency) {
+                    if (isset($parameters[$dependency->name])) {
+                           $resolvedClassParameters[] = $parameters[$dependency->name];
+                    } else $resolvedClassParameters[] = $this->resolve($abstract, $dependency, $force);
                 }
-            }
 
-            return $inspector->newInstanceArgs($resolvedClassParameters);
+                return $inspector->newInstanceArgs($resolvedClassParameters);
+            };
+        }
+     
+        return function ($abstract) {
+            return new $abstract;
         };
     }
 
@@ -334,13 +169,16 @@ class Container implements ArrayAccess
      *
      * @return Object
      */
+
     protected function resolve($abstract, $dependency, $force)
     {
-        if (!isset($this->cached[$abstract][$dependency->name]) || $force === true) {
-            $this->cached[$abstract][$dependency->name] = $this->generate($abstract, $dependency);
+        $key = $abstract.$dependency->name;
+
+        if (!isset($this->resolved[$key]) || $force === true) {
+            $this->resolved[$key] = $this->generate($abstract, $dependency);
         }
 
-        return $this->cached[$abstract][$dependency->name]($this);
+        return $this->resolved[$key]($this);
     }
 
     /**
@@ -351,82 +189,60 @@ class Container implements ArrayAccess
      *
      * @return Closure
      */
+
     protected function generate($abstract, $dependency)
     {
-        $class = $dependency->getClass();
-
-        if ($class !== null) {
+        if ($class = $dependency->getClass()) {
             $classname = $class->name;
-            
-            if (isset($this->dependencies[$abstract]) && isset($this->dependencies[$abstract][$classname])) {
-                return function () use ($classname, $abstract) {
-                    return $this->dependencies[$abstract][$classname]();
-                };
-            } else {
-                return function () use ($classname) {
-                    return $this->make($classname);
-                };
-            }
-        } else {
-            return function () use ($class) {
-                return $class->getDefaultValue();
+            $key = $abstract.$classname;
+
+            if (isset($this->dependencies[$key])) {
+                   return $this->dependencies[$key];
+            } else return function () use ($classname) {
+                   return $this->make($classname);
             };
         }
+
+        return $class->getDefaultValue();
     }
 
-    /**
-     * For an array access method
-     *
-     * @see http://php.net/manual/en/class.arrayaccess.php
-     * @return object|null
-     */
-    public function offsetGet($offset)
+}
+
+trait ContainerCollectionMethods
+{
+
+    abstract public function make($abstract, $parameters = [], $force = false);
+    abstract public function instance($abstract, $instance);
+    abstract public function bind($abstract, $concrete, $shared = false);
+
+    public function offsetGet($abstract)
     {
-        if (isset($this->resolved[$offset])) {
-            return $this->resolved[$offset];
+        if (isset($this->collection[$abstract])) {
+            $concrete = $this->collection[$abstract];
+
+            if ($concrete instanceof Closure) {
+                   return $concrete($this);
+            } else return $concrete;
         }
 
-        if (isset($this->resolvable[$offset])) {
-            return $this->resolvable[$offset]($this);
-        }
-
-        return $this->make($offset);
+        return $this->make($abstract);
     }
 
-    /**
-     * For an array access method
-     *
-     * @see http://php.net/manual/en/class.arrayaccess.php
-     * @return null
-     */
-    public function offsetSet($offset, $value)
+    public function offsetSet($abstract, $value)
     {
         if (is_object($value)) {
-               $this->instance($offset, $value);
-        } else $this->bind($offset, $value);
+               $this->instance($abstract, $value);
+        } else $this->bind($abstract, $value);
     }
 
-    /**
-     * For an array access method
-     *
-     * @see http://php.net/manual/en/class.arrayaccess.php
-     * @return bool
-     */
-    public function offsetExists($offset)
+    public function offsetExists($abstract)
     {
-        return isset($this->resolved[$offset]) || isset($this->resolvable[$offset]);
+        return isset($this->collection[$abstract]);
     }
 
-    /**
-     * For an array access method
-     *
-     * @see http://php.net/manual/en/class.arrayaccess.php
-     * @return null
-     */
-    public function offsetUnset($offset)
+    public function offsetUnset($abstract)
     {
-        unset($this->resolved[$offset]);
-        unset($this->resolvable[$offset]);
+        unset($this->collection[$abstract]);
     }
 
     /**
@@ -435,6 +251,7 @@ class Container implements ArrayAccess
      * @see http://php.net/manual/en/language.oop5.magic.php
      * @return object|null
      */
+
     public function __get($offset)
     {
         return $this->offsetGet(str_replace('_', '.', $offset));
@@ -446,6 +263,7 @@ class Container implements ArrayAccess
      * @see http://php.net/manual/en/language.oop5.magic.php
      * @return null
      */
+
     public function __set($offset, $value)
     {
         $this->offsetSet(str_replace('_', '.', $offset), $value);
@@ -457,6 +275,7 @@ class Container implements ArrayAccess
      * @see http://php.net/manual/en/language.oop5.magic.php
      * @return null
      */
+
     public function __unset($offset)
     {
         $this->offsetUnset(str_replace('_', '.', $offset));
@@ -468,9 +287,196 @@ class Container implements ArrayAccess
      * @see http://php.net/manual/en/language.oop5.magic.php
      * @return bool
      */
+
     public function __isset($offset)
     {
         return $this->offsetExists(str_replace('_', '.', $offset));
     }
 
 }
+
+trait ContainerAbstractionMethods
+{
+
+    /**
+     * Verify if an element exists in container.
+     *
+     * @return bool
+     */
+
+    public function isBound($abstract)
+    {
+        return isset($this->collection[$abstract]);
+    }
+
+    /**
+     * Verify if an element has a singleton instance.
+     *
+     * @return bool
+     */
+
+    public function isSingleton($abstract)
+    {
+        return isset($this->collection[$abstract]);
+    }
+
+    /**
+     * Reset the container, removing all the elements, cache and options.
+     *
+     * @return void
+     */
+
+    public function flush()
+    {
+        $this->collection = [];
+        $this->dependencies = [];
+        $this->resolvable = [];
+        $this->resolved = [];
+    }
+
+    /**
+     * Bind a new element to the container.
+     *
+     * @param string         $abstract The alias name that will be used to call the element.
+     * @param string|closure $concrete The element class name, or an closure that makes the element.
+     * @param bool           $shared   Define if the element will be a singleton instance.
+     *
+     * @return \Codeburner\Container\Container
+     */
+
+    public function bind($abstract, $concrete, $shared = false)
+    {
+        if ($concrete instanceof Closure === false) {
+            $concrete = function (Container $container) use ($concrete) {
+                return $container->make($concrete);
+            };
+        }
+
+        if ($shared === true) {
+               $this->collection[$abstract] = $concrete($this);
+        } else $this->collection[$abstract] = $concrete;
+
+        return $this;
+    }
+
+    /**
+     * Bind a new element to the container IF the element name not exists in the container.
+     *
+     * @param string         $abstract The alias name that will be used to call the element.
+     * @param string|closure $concrete The element class name, or an closure that makes the element.
+     * @param bool           $shared   Define if the element will be a singleton instance.
+     *
+     * @return \Codeburner\Container\Container
+     */
+
+    public function bindIf($abstract, $concrete, $shared = false)
+    {
+        if (!isset($this->collection[$abstract])) {
+            $this->bind($abstract, $concrete, $shared);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Bind an specific instance to a class dependency.
+     *
+     * @param string         $class          The class full name.
+     * @param string         $dependencyName The dependency full name.
+     * @param string|closure $dependency     The specific object class name or a classure that makes the element.
+     *
+     * @return \Codeburner\Container\Container
+     */
+
+    public function bindTo($class, $dependencyName, $dependency)
+    {
+        if ($dependency instanceof Closure === false) {
+            $dependency = function () use ($dependency) {
+                return $this->offsetGet($dependency);
+            };
+        }
+
+        $this->dependencies[$class.$dependencyName] = $dependency;
+
+        return $this;
+    }
+
+    /**
+     * Bind an element that will be construct only one time, and every call for the element,
+     * the same instance will be given.
+     *
+     * @param string         $abstract The alias name that will be used to call the element.
+     * @param string|closure $concrete The element class name, or an closure that makes the element.
+     *
+     * @return \Codeburner\Container\Container
+     */
+
+    public function singleton($abstract, $concrete)
+    {
+        $this->bind($abstract, $concrete, true);
+
+        return $this;
+    }
+
+    /**
+     * Bind an object to the container.
+     *
+     * @param string $abstract The alias name that will be used to call the object.
+     * @param object $instance The object that will be inserted.
+     *
+     * @return \Codeburner\Container\Container
+     */ 
+
+    public function instance($abstract, $instance)
+    {
+        if (is_object($instance)) {
+            $this->collection[$abstract] = $instance;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Modify an element with a given function that receive the old element as argument.
+     *
+     * @param string  $abstract  The alias name that will be used to call the element.
+     * @param closure $extension The function that receives the old element and return a new or modified one.
+     *
+     * @return \Codeburner\Container\Container
+     */
+
+    public function extend($abstract, $extension)
+    {
+        if (isset($this->collection[$abstract])) {
+            $object = $this->collection[$abstract];
+
+            if ($object instanceof Closure === false) {
+                   $this->collection = $extension($object, $this);
+            } else $this->collection = function () use ($object, $extension) {
+                return $extension($object($this), $this);
+            };
+        }
+
+        return $this;
+    }
+
+    /**
+     * Makes an resolvable element an singleton.
+     *
+     * @param string $abstract The alias name that will be used to call the element.
+     *
+     * @return \Codeburner\Container\Container
+     */
+
+    public function share($abstract)
+    {
+        if (isset($this->collection[$abstract]) && $this->collection[$abstract] instanceof Closure) {
+            $this->collection[$abstract] = $this->collection[$abstract]($this);
+        }
+
+        return $this;
+    }
+
+}
+
+
