@@ -451,8 +451,8 @@ trait ContainerAbstractionMethods
             $object = $this->collection[$abstract];
 
             if ($object instanceof Closure === false) {
-                   $this->collection = $extension($object, $this);
-            } else $this->collection = function () use ($object, $extension) {
+                   $this->collection[$abstract] = $extension($object, $this);
+            } else $this->collection[$abstract] = function () use ($object, $extension) {
                 return $extension($object($this), $this);
             };
         }
