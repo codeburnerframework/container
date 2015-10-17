@@ -97,7 +97,7 @@ class Container implements ArrayAccess
             }
         }
 
-        return call_user_func_array($abstract, $resolvedClosureDependencies);
+        return call_user_func_array($function, $resolvedClosureDependencies);
     }
 
     /**
@@ -245,48 +245,20 @@ trait ContainerCollectionMethods
         unset($this->collection[$abstract]);
     }
 
-    /**
-     * For an class attribute access method
-     *
-     * @see http://php.net/manual/en/language.oop5.magic.php
-     * @return object|null
-     */
-
     public function __get($offset)
     {
         return $this->offsetGet(str_replace('_', '.', $offset));
     }
-
-    /**
-     * For an class attribute access method
-     *
-     * @see http://php.net/manual/en/language.oop5.magic.php
-     * @return null
-     */
 
     public function __set($offset, $value)
     {
         $this->offsetSet(str_replace('_', '.', $offset), $value);
     }
 
-    /**
-     * For an class attribute access method
-     *
-     * @see http://php.net/manual/en/language.oop5.magic.php
-     * @return null
-     */
-
     public function __unset($offset)
     {
         $this->offsetUnset(str_replace('_', '.', $offset));
     }
-
-    /**
-     * For an class attribute access method
-     *
-     * @see http://php.net/manual/en/language.oop5.magic.php
-     * @return bool
-     */
 
     public function __isset($offset)
     {
