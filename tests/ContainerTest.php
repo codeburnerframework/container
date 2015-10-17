@@ -114,25 +114,25 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertFalse($this->container->isBound('a'));
 	}
 
-	public function testIsResolved()
+	public function testIsSingleton()
 	{
 		$this->container->singleton('a', 'stdClass');
 
-		$this->assertTrue($this->container->isResolved('a'));
+		$this->assertTrue($this->container->isSingleton('a'));
 	}
 
 	public function testBindSingleton()
 	{
 		$this->container->bind('a', 'stdClass', true);
 
-		$this->assertTrue($this->container->isResolved('a'));
+		$this->assertTrue($this->container->isSingleton('a'));
 	}
 
 	public function testSingleton()
 	{
 		$this->container->singleton('b', 'stdClass');
 
-		$this->assertTrue($this->container->isResolved('b'));
+		$this->assertTrue($this->container->isSingleton('b'));
 	}
 
 	public function testBindIf()
@@ -141,7 +141,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
 		$this->container->bindIf('a', 'stdClass', true);
 
-		$this->assertTrue($this->container->isResolved('a'));
+		$this->assertTrue($this->container->isSingleton('a'));
 	}
 
 	public function testBindInstance()
@@ -155,7 +155,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('should work', $this->container['a']->test);
 	}
 
-	public function testBindToResolved()
+	public function testBindToSingleton()
 	{
 		$instance = new stdClass;
 		
@@ -203,7 +203,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(property_exists($this->container['a'], 'test'));
 	}
 
-	public function testExtendResolved()
+	public function testExtendSingleton()
 	{
 		$this->container->bind('a', 'stdClass', true);
 
@@ -222,7 +222,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
 		$this->container->share('a');
 
-		$this->assertTrue($this->container->isResolved('a'));
+		$this->assertTrue($this->container->isSingleton('a'));
 	}
 
 	public function testMakeBinding()
