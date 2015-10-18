@@ -82,7 +82,7 @@ class Container implements ArrayAccess
     {
         $this->collection = [];
         $this->dependencies = [];
-        $this->resolvable = [];
+        $this->resolving = [];
         $this->resolved = [];
     }
 
