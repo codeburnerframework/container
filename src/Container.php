@@ -228,16 +228,16 @@ class Container implements ArrayAccess
  * 
  * @author Alex Rohleder <contato@alexrohleder.com.br>
  * @since 1.0.0
+ *
+ * @property array $collection
+ *
+ * @method make($abstract, $parameters = [], $force = false)
+ * @method instance($abstract, $instance)
+ * @method bind($abstract, $concrete, $shared = false)
  */
 
 trait ContainerCollectionMethods
 {
-
-    public $collection;
-
-    abstract public function make($abstract, $parameters = [], $force = false);
-    abstract public function instance($abstract, $instance);
-    abstract public function bind($abstract, $concrete, $shared = false);
 
     public function offsetGet($abstract)
     {
@@ -297,15 +297,15 @@ trait ContainerCollectionMethods
  * 
  * @author Alex Rohleder <contato@alexrohleder.com.br>
  * @since 1.0.0
+ *
+ * @property array $collection
+ * @property array $dependencies
+ *
+ * @method offsetGet($abstract)
  */
 
 trait ContainerAbstractionMethods
 {
-
-    public $collection;
-    public $dependencies;
-    
-    abstract public function offsetGet($abstract);
 
     /**
      * Verify if an element exists in container.
