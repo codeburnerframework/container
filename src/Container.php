@@ -73,6 +73,20 @@ class Container implements ArrayAccess
     protected $resolved;
 
     /**
+     * Reset the container, removing all the elements, cache and options.
+     *
+     * @return void
+     */
+
+    public function flush()
+    {
+        $this->collection = [];
+        $this->dependencies = [];
+        $this->resolvable = [];
+        $this->resolved = [];
+    }
+
+    /**
      * Call a user function injecting the dependencies.
      *
      * @param string|Closure $function   The function or the user function name.
@@ -208,9 +222,18 @@ class Container implements ArrayAccess
 
 }
 
+/**
+ * Implement all basic manipulation methods, including the ArrayAccess interface methods
+ * and all the magic acessor methods as __get or __set.
+ * 
+ * @author Alex Rohleder <contato@alexrohleder.com.br>
+ * @since 1.0.0
+ */
+
 trait ContainerCollectionMethods
 {
 
+    abstract public $collection;
     abstract public function make($abstract, $parameters = [], $force = false);
     abstract public function instance($abstract, $instance);
     abstract public function bind($abstract, $concrete, $shared = false);
@@ -267,8 +290,20 @@ trait ContainerCollectionMethods
 
 }
 
+/**
+ * Implement all abstraction method, such bind, bindIf, bindTo, share, extends,
+ * isBound, isSingleton, flush.
+ * 
+ * @author Alex Rohleder <contato@alexrohleder.com.br>
+ * @since 1.0.0
+ */
+
 trait ContainerAbstractionMethods
 {
+
+    abstract public $collection;
+    abstract public $dependencies;
+    abstract public function offsetGet($abstract);
 
     /**
      * Verify if an element exists in container.
@@ -290,20 +325,6 @@ trait ContainerAbstractionMethods
     public function isSingleton($abstract)
     {
         return isset($this->collection[$abstract]);
-    }
-
-    /**
-     * Reset the container, removing all the elements, cache and options.
-     *
-     * @return void
-     */
-
-    public function flush()
-    {
-        $this->collection = [];
-        $this->dependencies = [];
-        $this->resolvable = [];
-        $this->resolved = [];
     }
 
     /**
