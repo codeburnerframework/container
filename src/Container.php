@@ -233,7 +233,8 @@ class Container implements ArrayAccess
 trait ContainerCollectionMethods
 {
 
-    abstract public $collection;
+    public $collection;
+
     abstract public function make($abstract, $parameters = [], $force = false);
     abstract public function instance($abstract, $instance);
     abstract public function bind($abstract, $concrete, $shared = false);
@@ -301,8 +302,9 @@ trait ContainerCollectionMethods
 trait ContainerAbstractionMethods
 {
 
-    abstract public $collection;
-    abstract public $dependencies;
+    public $collection;
+    public $dependencies;
+    
     abstract public function offsetGet($abstract);
 
     /**
