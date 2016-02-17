@@ -20,7 +20,7 @@ add `codeburner/container` to your `composer.json` file.
 ```json
 {
 	"require": {
-		"codeburner/container": "dev-master"		
+		"codeburner/container": "^1.0"		
 	}
 }
 ```
