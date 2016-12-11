@@ -100,7 +100,7 @@ class Container implements ContainerInterface
      * @return object|null
      */
 
-    public function make($abstract, array $parameters = [], bool $force = false)
+    public function make(string $abstract, array $parameters = [], bool $force = false)
     {
         if ($force === false && isset($this->collection[$abstract])) {
             return $this->get($abstract);
@@ -130,7 +130,7 @@ class Container implements ContainerInterface
         if ($constructor  = $inspector->getConstructor()) {
             $dependencies = $constructor->getParameters();
 
-            return function ($abstract, $parameters) use ($inspector, $dependencies, $force) {
+            return function (string $abstract, array $parameters) use ($inspector, $dependencies, $force) {
                 $resolvedClassParameters = [];
 
                 foreach ($dependencies as $dependency) {
@@ -143,7 +143,7 @@ class Container implements ContainerInterface
             };
         }
 
-        return function ($abstract) {
+        return function (string $abstract) {
             return new $abstract;
         };
     }
@@ -199,15 +199,17 @@ class Container implements ContainerInterface
     /**
      * Reset the container, removing all the elements, cache and options.
      *
-     * @return void
+     * @return self
      */
 
-    public function flush()
+    public function flush() : self
     {
         $this->collection = [];
         $this->dependencies = [];
         $this->resolving = [];
         $this->resolved = [];
+
+        return $this;
     }
 
     /**
@@ -263,21 +265,36 @@ class Container implements ContainerInterface
 
     public function isSingleton(string $abstract) : bool
     {
-        return isset($this->collection[$abstract]);
+        return isset($this->collection[$abstract]) && $this->collection[$abstract] instanceof Closure === false;
+    }
+
+    /**
+     * Verify if an element is a instance of something.
+     *
+     * @param  string The class name or container element name to resolve dependencies.
+     * @return bool
+     */
+    public function isInstance(string $abstract) : bool
+    {
+        return isset($this->collection[$abstract]) && is_object($this->collection[$abstract]);
     }
 
     /**
      * Bind a new element to the container.
      *
-     * @param string         $abstract The alias name that will be used to call the element.
-     * @param string|closure $concrete The element class name, or an closure that makes the element.
-     * @param bool           $shared   Define if the element will be a singleton instance.
+     * @param string                $abstract The alias name that will be used to call the element.
+     * @param string|closure|object $concrete The element class name, or an closure that makes the element, or the object itself.
+     * @param bool                  $shared   Define if the element will be a singleton instance.
      *
      * @return \Codeburner\Container\Container
      */
 
     public function set(string $abstract, $concrete, bool $shared = false) : self
     {
+        if (is_object($concrete)) {
+            return $this->instance($abstract, $concrete);
+        }
+
         if ($concrete instanceof Closure === false) {
             $concrete = function (Container $container) use ($concrete) {
                 return $container->make($concrete);
