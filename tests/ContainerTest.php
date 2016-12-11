@@ -104,7 +104,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
 		$this->container->setIf('a', 'stdClass', true);
 
-		$this->assertTrue($this->container->isSingleton('a'));
+		$this->assertTrue(! $this->container->isSingleton('a'));
 	}
 
 	public function testSetInstance()
