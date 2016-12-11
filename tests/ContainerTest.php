@@ -114,7 +114,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	public function testSetInstance()
 	{
 		$instance = new stdClass;
-		
+
 		$instance->test = 'should work';
 
 		$this->container->instance('a', $instance);
@@ -125,7 +125,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	public function testSetToSingleton()
 	{
 		$instance = new stdClass;
-		
+
 		$instance->test = 'should work';
 
 		$this->container->setTo('OneDependencyClass', 'stdClass', $instance);
@@ -142,7 +142,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 			$instance = new stdClass;
 			$instance->test = 'should work';
 
-			return $instance;		
+			return $instance;
 		});
 
 		$instance = $this->container->make('OneDependencyClass');
@@ -202,7 +202,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	public function testContainerAware()
 	{
 		$instance = $this->container->make('ContainerAwareClass');
-		
+
 		$instance->setContainer($this->container);
 
 		$this->assertInstanceof('Codeburner\Container\Container', $instance->getContainer());
@@ -231,5 +231,5 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 			return isset($std->test);
 		}, ['std' => $test]));
 	}
-	
+
 }
