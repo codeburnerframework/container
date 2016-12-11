@@ -81,7 +81,7 @@ class Container implements ContainerInterface
                 $resolvedClosureDependencies[] = $parameters[$dependency->name];
             } else {
                 if (($class = $dependency->getClass()) === null) {
-                       $resolvedClosureDependencies[] = $dependency->isOptional() ? $dependency->getDefaultValue() : null;
+                       $resolvedClosureDependencies[] = $dependency->getDefaultValue();
                 } else $resolvedClosureDependencies[] = $this->make($class->name);
             }
         }
@@ -111,8 +111,7 @@ class Container implements ContainerInterface
         }
 
         try {
-            $callable = $this->resolving[$abstract] = $this->construct($abstract, $force);
-            return $callable($abstract, $parameters);
+            return ($this->resolving[$abstract] = $this->construct($abstract, $force))($abstract, $parameters);
         } catch (Exception $e) {
             throw new Exceptions\ContainerException($e->getMessage());
         }
@@ -167,7 +166,7 @@ class Container implements ContainerInterface
     {
         $key = $abstract.$dependency->name;
 
-        if (!isset($this->resolved[$key]) || $force === true) {
+        if (! isset($this->resolved[$key]) || $force === true) {
             $this->resolved[$key] = $this->generate($abstract, $dependency);
         }
 
@@ -374,8 +373,7 @@ class Container implements ContainerInterface
     public function instance(string $abstract, $instance) : self
     {
         if (! is_object($instance)) {
-            $type = gettype($instance);
-            throw new Exceptions\ContainerException("Trying to store {$type} as object.");
+            throw new Exceptions\ContainerException('Trying to store ' . gettype($type) . ' as object.');
         }
 
         $this->collection[$abstract] = $instance;
@@ -426,7 +424,7 @@ class Container implements ContainerInterface
     public function share(string $abstract) : self
     {
         if (! isset($this->collection[$abstract])) {
-            throw new Exceptions\NotFoundException;
+            throw new Exceptions\NotFoundException("Element '$abstract' not found");
         }
 
         if (! $this->collection[$abstract] instanceof Closure) {
