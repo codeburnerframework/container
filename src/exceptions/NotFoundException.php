@@ -10,7 +10,6 @@
 
 namespace Codeburner\Container\Exceptions;
 
-use Exception;
 use Psr\Container\Exception\NotFoundException as NotFoundExceptionInterface;
 
 /**
@@ -18,9 +17,9 @@ use Psr\Container\Exception\NotFoundException as NotFoundExceptionInterface;
  * calling the get method.
  *
  * @author Alex Rohleder <alexrohleder96@outlook.com>
- * @since 1.0.0
+ * @since 2.0.0
  */
-class NotFoundException extends Exception implements NotFoundExceptionInterface
+class NotFoundException extends ContainerException implements NotFoundExceptionInterface
 {
 
 }
