@@ -54,64 +54,31 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue($a->dac->number != $b->dac->number);
 	}
 
-	public function testGetNonExistentBinding()
+	public function testSet()
 	{
-		$this->assertInstanceof('TwoDependenciesClass', $this->container['TwoDependenciesClass']);
-
-		$this->assertInstanceof('OneDependencyClass', $this->container->OneDependencyClass);
-	}
-
-	public function testArrayAccessMethods()
-	{
-		$this->container['test'] = new stdClass;
-
-		$this->container['test']->someAttribute = 'test case';
-		
-		$this->assertTrue(isset($this->container['test']));
-		
-		unset($this->container['test']);
-		
-		$this->assertFalse(isset($this->container['test']));
-	}
-
-	public function testMagicAccessMethods()
-	{
-		$this->container->test = new stdClass;
-
-		$this->container->test->someAttribute = 'test case';
-		
-		$this->assertTrue(isset($this->container->test));
-		
-		unset($this->container->test);
-		
-		$this->assertFalse(isset($this->container->test));
-	}
-
-	public function testBind()
-	{
-		$this->container->bind('a', function ($container) {
+		$this->container->set('a', function ($container) {
 			return 'should work';
 		}, true);
 
-		$this->assertEquals('should work', $this->container['a']);
+		$this->assertEquals('should work', $this->container->get('a'));
 	}
 
 	public function testIsBound()
 	{
-		$this->container->bind('a', 'stdClass');
+		$this->container->set('a', 'stdClass');
 
-		$this->assertTrue($this->container->isBound('a'));
+		$this->assertTrue($this->container->has('a'));
 	}
 
 	public function testFlush()
 	{
-		$this->container->bind('a', 'stdClass');
+		$this->container->set('a', 'stdClass');
 
-		$this->assertTrue($this->container->isBound('a'));
+		$this->assertTrue($this->container->has('a'));
 
 		$this->container->flush();
 
-		$this->assertFalse($this->container->isBound('a'));
+		$this->assertFalse($this->container->has('a'));
 	}
 
 	public function testIsSingleton()
@@ -121,9 +88,9 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue($this->container->isSingleton('a'));
 	}
 
-	public function testBindSingleton()
+	public function testSetSingleton()
 	{
-		$this->container->bind('a', 'stdClass', true);
+		$this->container->set('a', 'stdClass', true);
 
 		$this->assertTrue($this->container->isSingleton('a'));
 	}
@@ -135,16 +102,16 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue($this->container->isSingleton('b'));
 	}
 
-	public function testBindIf()
+	public function testSetIf()
 	{
-		$this->container->bindIf('a', 'stdClass');
+		$this->container->setIf('a', 'stdClass');
 
-		$this->container->bindIf('a', 'stdClass', true);
+		$this->container->setIf('a', 'stdClass', true);
 
 		$this->assertTrue($this->container->isSingleton('a'));
 	}
 
-	public function testBindInstance()
+	public function testSetInstance()
 	{
 		$instance = new stdClass;
 		
@@ -152,26 +119,26 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
 		$this->container->instance('a', $instance);
 
-		$this->assertEquals('should work', $this->container['a']->test);
+		$this->assertEquals('should work', $this->container->get('a')->test);
 	}
 
-	public function testBindToSingleton()
+	public function testSetToSingleton()
 	{
 		$instance = new stdClass;
 		
 		$instance->test = 'should work';
 
-		$this->container->bindTo('OneDependencyClass', 'stdClass', $instance);
+		$this->container->setTo('OneDependencyClass', 'stdClass', $instance);
 
 		$instance = $this->container->make('OneDependencyClass');
 
 		$this->assertTrue(property_exists($instance->std, 'test'));
 	}
 
-	public function testBindToResolvableClosure()
+	public function testSetToResolvableClosure()
 	{
 
-		$this->container->bindTo('OneDependencyClass', 'stdClass', function () {
+		$this->container->setTo('OneDependencyClass', 'stdClass', function () {
 			$instance = new stdClass;
 			$instance->test = 'should work';
 
@@ -183,16 +150,16 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(property_exists($instance->std, 'test'));
 	}
 
-	public function testBindToResolvableString()
+	public function testSetToResolvableString()
 	{
-		$this->container->bindTo('OneDependencyClass', 'stdClass', 'stdClass');
+		$this->container->setTo('OneDependencyClass', 'stdClass', $this->container->make('stdClass'));
 
 		$this->assertInstanceof('OneDependencyClass', $this->container->make('OneDependencyClass'));
 	}
 
 	public function testExtendResolvable()
 	{
-		$this->container->bind('a', 'stdClass');
+		$this->container->set('a', 'stdClass');
 
 		$this->container->extend('a', function ($stdClass, $container) {
 			$stdClass->test = 'should work';
@@ -200,12 +167,12 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 			return $stdClass;
 		});
 
-		$this->assertTrue(property_exists($this->container['a'], 'test'));
+		$this->assertTrue(property_exists($this->container->get('a'), 'test'));
 	}
 
 	public function testExtendSingleton()
 	{
-		$this->container->bind('a', 'stdClass', true);
+		$this->container->set('a', 'stdClass', true);
 
 		$this->container->extend('a', function ($stdClass, $container) {
 			$stdClass->test = 'should work';
@@ -213,21 +180,21 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 			return $stdClass;
 		});
 
-		$this->assertTrue(property_exists($this->container['a'], 'test'));
+		$this->assertTrue(property_exists($this->container->get('a'), 'test'));
 	}
 
 	public function testShare()
 	{
-		$this->container->bind('a', 'stdClass');
+		$this->container->set('a', 'stdClass');
 
 		$this->container->share('a');
 
 		$this->assertTrue($this->container->isSingleton('a'));
 	}
 
-	public function testMakeBinding()
+	public function testMakeseting()
 	{
-		$this->container->bind('a', 'stdClass');
+		$this->container->set('a', 'stdClass');
 
 		$this->assertInstanceof('stdClass', $this->container->make('a'));
 	}
