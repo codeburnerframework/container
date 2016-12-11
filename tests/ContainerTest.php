@@ -23,7 +23,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
 	public function testMakeInvalid()
 	{
-		$this->setExpectedException('Exception');
+		$this->setExpectedException('Throwable');
 
 		$this->container->make('SomeClassName');
 	}
