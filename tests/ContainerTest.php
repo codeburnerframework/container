@@ -23,13 +23,9 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
 	public function testMakeInvalid()
 	{
-		$this->setExpectedException('ErrorException');
+		$this->setExpectedException('Exception');
 
-		try {
-			$this->container->make('SomeClassName');
-		} catch (Exception $e) {
-			throw new ErrorException;
-		}
+		$this->container->make('SomeClassName');
 	}
 
 	public function testSimpleDependencyInjection()
