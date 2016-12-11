@@ -110,11 +110,7 @@ class Container implements ContainerInterface
             return $this->resolving[$abstract]($abstract, $parameters);
         }
 
-        try {
-            return ($this->resolving[$abstract] = $this->construct($abstract, $force))($abstract, $parameters);
-        } catch (Exception $e) {
-            throw new Exceptions\ContainerException($e->getMessage());
-        }
+        return ($this->resolving[$abstract] = $this->construct($abstract, $force))($abstract, $parameters);
     }
 
     /**
