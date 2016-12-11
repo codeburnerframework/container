@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 /**
  * Codeburner Framework.
@@ -20,7 +20,7 @@ use Psr\Container\ContainerInterface;
 /**
  * The container class is reponsable to construct all objects
  * of the project automatically, with total abstraction of dependencies.
- * 
+ *
  * @author Alex Rohleder <contato@alexrohleder.com.br>
  * @version 1.0.0
  * @since 0.0.1
@@ -147,7 +147,7 @@ class Container implements ContainerInterface
                 return $inspector->newInstanceArgs($resolvedClassParameters);
             };
         }
-     
+
         return function ($abstract) {
             return new $abstract;
         };
@@ -245,7 +245,7 @@ class Container implements ContainerInterface
     /**
      * Returns true if the container can return an entry for the given identifier.
      * Returns false otherwise.
-     * 
+     *
      * `has($abstract)` returning true does not mean that `get($abstract)` will not throw an exception.
      * It does however mean that `get($abstract)` will not throw a `NotFoundException`.
      *
@@ -332,7 +332,7 @@ class Container implements ContainerInterface
                 $dependency = function () use ($dependency) {
                     return $dependency;
                 };
-            } else { 
+            } else {
                 $dependency = function () use ($dependency) {
                     return $this->get($dependency);
                 };
@@ -369,7 +369,7 @@ class Container implements ContainerInterface
      *
      * @throws \Psr\Container\Exception\ContainerException When $instance is not an object.
      * @return \Codeburner\Container\Container
-     */ 
+     */
 
     public function instance(string $abstract, $instance) : self
     {
@@ -379,7 +379,7 @@ class Container implements ContainerInterface
         }
 
         $this->collection[$abstract] = $instance;
-        
+
         return $this;
     }
 
@@ -398,7 +398,7 @@ class Container implements ContainerInterface
         if (! isset($this->collection[$abstract])) {
             throw new Exceptions\NotFoundException;
         }
-    
+
         $object = $this->collection[$abstract];
 
         if ($object instanceof Closure) {
@@ -408,7 +408,7 @@ class Container implements ContainerInterface
         } else {
             $this->collection[$abstract] = $extension($object, $this);
         }
-        
+
         return $this;
     }
 
@@ -434,7 +434,7 @@ class Container implements ContainerInterface
         }
 
         $this->collection[$abstract] = $this->collection[$abstract]($this);
-        
+
         return $this;
     }
 
