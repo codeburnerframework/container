@@ -16,6 +16,7 @@ use ReflectionClass;
 use ReflectionFunction;
 use ReflectionParameter;
 use Psr\Container\ContainerInterface;
+use Codeburner\Container\Exceptions\{ContainerException, NotFoundException};
 
 /**
  * The container class is reponsable to construct all objects
@@ -225,14 +226,14 @@ class Container implements ContainerInterface
     public function get($abstract)
     {
         if (! isset($this->collection[$abstract])) {
-            throw new Exceptions\NotFoundException("Element '$abstract' not found");
+            throw new NotFoundException("Element '$abstract' not found");
         }
 
         if ($this->collection[$abstract] instanceof Closure) {
             try {
                 return $this->collection[$abstract]($this);
             } catch (Exception $e) {
-                throw new Exceptions\ContainerException($e->getMessage());
+                throw new ContainerException("An exception was thrown while attempt to make $abstract", 0, $e);
             }
         }
 
@@ -386,7 +387,7 @@ class Container implements ContainerInterface
     public function instance(string $abstract, $instance) : self
     {
         if (! is_object($instance)) {
-            throw new Exceptions\ContainerException('Trying to store ' . gettype($type) . ' as object.');
+            throw new ContainerException('Trying to store ' . gettype($type) . ' as object.');
         }
 
         $this->collection[$abstract] = $instance;
@@ -407,7 +408,7 @@ class Container implements ContainerInterface
     public function extend(string $abstract, closure $extension) : self
     {
         if (! isset($this->collection[$abstract])) {
-            throw new Exceptions\NotFoundException;
+            throw new NotFoundException;
         }
 
         $object = $this->collection[$abstract];
@@ -437,11 +438,11 @@ class Container implements ContainerInterface
     public function share(string $abstract) : self
     {
         if (! isset($this->collection[$abstract])) {
-            throw new Exceptions\NotFoundException("Element '$abstract' not found");
+            throw new NotFoundException("Element '$abstract' not found");
         }
 
         if (! $this->collection[$abstract] instanceof Closure) {
-            throw new Exceptions\ContainerException("'$abstract' must be a resolvable element");
+            throw new ContainerException("'$abstract' must be a resolvable element");
         }
 
         $this->collection[$abstract] = $this->collection[$abstract]($this);
