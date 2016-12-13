@@ -71,9 +71,9 @@ class Container implements ContainerInterface
         $inspector = new ReflectionFunction($function);
 
         $dependencies = $inspector->getParameters();
-        $dependencies = $this->getDependencies('', $dependencies, $parameters, $force);
+        $dependencies = $this->process('', $parameters, $dependencies, $force);
 
-        return call_user_func_array($function, $resolvedClosureDependencies);
+        return call_user_func_array($function, $dependencies);
     }
 
     /**
@@ -120,7 +120,7 @@ class Container implements ContainerInterface
         if ($constructor = $inspector->getConstructor() && $dependencies = $constructor->getParameters()) {
             return function (string $abstract, array $parameters) use ($inspector, $dependencies, $force) {
                 return $inspector->newInstanceArgs(
-                    $this->getDependencies($abstract, $dependencies, $force)
+                    $this->process($abstract, $parameters, $dependencies, $force)
                 );
             };
         }
@@ -131,12 +131,36 @@ class Container implements ContainerInterface
     }
 
     /**
+     * Process all dependencies
+     *
+     * @param string $abstract     The class name or container element name to make
+     * @param array  $parameters   User defined parameters that must be used instead of resolved ones
+     * @param array  $dependencies Array of ReflectionParameter
+     * @param bool   $force        Specify if a new element must be given and the dependencies must have be recalculated.
+     *
+     * @throws ContainerException When a dependency cannot be solved.
+     * @return array
+     */
+
+    protected function process(string $abstract, array $parameters, array $dependencies, bool $force) : array
+    {
+        foreach ($dependencies as &$dependency) {
+            if (isset($parameters[$dependency->name])) {
+                   $dependency = $parameters[$dependency->name];
+            } else $dependency = $this->resolve($abstract, $dependency, $force);
+        }
+
+        return $dependencies;
+    }
+
+    /**
      * Resolve all the given class reflected dependencies.
      *
      * @param string               $abstract   The class name or container element name to resolve dependencies.
      * @param ReflectionParameter  $dependency The class dependency to be resolved.
      * @param bool                 $force      Specify if the dependencies must be recalculated.
      *
+     * @throws ContainerException When a dependency cannot be solved.
      * @return Object
      */
 
@@ -185,20 +209,6 @@ class Container implements ContainerInterface
         } catch (ReflectionException $e) {
             throw new ContainerException("Cannot resolve '" . $dependency->name . "' of '$abstract'", 0, $e);
         }
-    }
-
-    /**
-     * Get all resolved dependencies
-     *
-     * @param string $abstract     The class name or container element name to make.
-     * @param array  $dependencies Array of dependency names
-     * @param bool   $force        Specify if a new element must be given and the dependencies must have be recalculated.
-     *
-     * @return array
-     */
-    protected function getDependencies(string $abstract, array $dependencies, bool $force) : array
-    {
-        // TODO
     }
 
     /**
