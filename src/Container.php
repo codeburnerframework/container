@@ -62,22 +62,16 @@ class Container implements ContainerInterface
      *
      * @param string|Closure $function   The function or the user function name.
      * @param array          $parameters The predefined dependencies.
-     * @param bool           $force      Specify if a new element must be given and the dependencies must have be recalculated.
      *
      * @return mixed
      */
 
-    public function call($function, array $parameters = [], bool $force = false)
+    public function call($function, array $parameters = [])
     {
         $inspector = new ReflectionFunction($function);
-        $dependencies = $inspector->getParameters();
-        $resolvedClosureDependencies = [];
 
-        foreach ($dependencies as $dependency) {
-            if (isset($parameters[$dependency->name])) {
-                   $resolvedClosureDependencies[] = $parameters[$dependency->name];
-            } else $resolvedClosureDependencies[] = $this->resolve('', $dependency, $force);
-        }
+        $dependencies = $inspector->getParameters();
+        $dependencies = $this->getDependencies('', $dependencies, $parameters, $force);
 
         return call_user_func_array($function, $resolvedClosureDependencies);
     }
@@ -87,15 +81,14 @@ class Container implements ContainerInterface
      *
      * @param string $abstract   The class name or container element name to make.
      * @param array  $parameters Specific parameters definition.
-     * @param bool   $force      Specify if a new element must be given and the dependencies must have be recalculated.
      *
      * @throws ContainerException
      * @return object|null
      */
 
-    public function make(string $abstract, array $parameters = [], bool $force = false)
+    public function make(string $abstract, array $parameters = [])
     {
-        if ($force === false && isset($this->collection[$abstract])) {
+        if (isset($this->collection[$abstract])) {
             return $this->get($abstract);
         }
 
@@ -124,21 +117,15 @@ class Container implements ContainerInterface
     {
         $inspector = new ReflectionClass($abstract);
 
-        if ($constructor = $inspector->getConstructor() and $dependencies = $constructor->getParameters()) {
+        if ($constructor = $inspector->getConstructor() && $dependencies = $constructor->getParameters()) {
             return function (string $abstract, array $parameters) use ($inspector, $dependencies, $force) {
-                $resolvedClassDependencies = [];
-
-                foreach ($dependencies as $dependency) {
-                    if (isset($parameters[$dependency->name])) {
-                           $resolvedClassDependencies[] = $parameters[$dependency->name];
-                    } else $resolvedClassDependencies[] = $this->resolve($abstract, $dependency, $force);
-                }
-
-                return $inspector->newInstanceArgs($resolvedClassDependencies);
+                return $inspector->newInstanceArgs(
+                    $this->getDependencies($abstract, $dependencies, $force)
+                );
             };
         }
 
-        return function (string $abstract, array $parameters) {
+        return function (string $abstract) {
             return new $abstract;
         };
     }
@@ -196,8 +183,22 @@ class Container implements ContainerInterface
                 return $value;
             };
         } catch (ReflectionException $e) {
-            throw new ContainerException("Cannot resolve '" . $dependency->getName() . "' of '$abstract'", 0, $e);
+            throw new ContainerException("Cannot resolve '" . $dependency->name . "' of '$abstract'", 0, $e);
         }
+    }
+
+    /**
+     * Get all resolved dependencies
+     *
+     * @param string $abstract     The class name or container element name to make.
+     * @param array  $dependencies Array of dependency names
+     * @param bool   $force        Specify if a new element must be given and the dependencies must have be recalculated.
+     *
+     * @return array
+     */
+    protected function getDependencies(string $abstract, array $dependencies, bool $force) : array
+    {
+        // TODO
     }
 
     /**
