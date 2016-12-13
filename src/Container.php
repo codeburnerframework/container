@@ -10,11 +10,7 @@
 
 namespace Codeburner\Container;
 
-use Closure;
-use Exception;
-use ReflectionClass;
-use ReflectionFunction;
-use ReflectionParameter;
+use Closure, Exception, ReflectionClass, ReflectionException, ReflectionFunction, ReflectionParameter;
 use Psr\Container\ContainerInterface;
 use Codeburner\Container\Exceptions\{ContainerException, NotFoundException};
 
@@ -24,7 +20,6 @@ use Codeburner\Container\Exceptions\{ContainerException, NotFoundException};
  *
  * @author Alex Rohleder <contato@alexrohleder.com.br>
  * @version 1.0.0
- * @since 0.0.1
  */
 
 class Container implements ContainerInterface
@@ -67,11 +62,12 @@ class Container implements ContainerInterface
      *
      * @param string|Closure $function   The function or the user function name.
      * @param array          $parameters The predefined dependencies.
+     * @param bool           $force      Specify if a new element must be given and the dependencies must have be recalculated.
      *
      * @return mixed
      */
 
-    public function call($function, array $parameters = [])
+    public function call($function, array $parameters = [], bool $force = false)
     {
         $inspector = new ReflectionFunction($function);
         $dependencies = $inspector->getParameters();
@@ -79,12 +75,8 @@ class Container implements ContainerInterface
 
         foreach ($dependencies as $dependency) {
             if (isset($parameters[$dependency->name])) {
-                $resolvedClosureDependencies[] = $parameters[$dependency->name];
-            } else {
-                if (($class = $dependency->getClass()) === null) {
-                       $resolvedClosureDependencies[] = $dependency->getDefaultValue();
-                } else $resolvedClosureDependencies[] = $this->make($class->name);
-            }
+                   $resolvedClosureDependencies[] = $parameters[$dependency->name];
+            } else $resolvedClosureDependencies[] = $this->resolve('', $dependency, $force);
         }
 
         return call_user_func_array($function, $resolvedClosureDependencies);
@@ -97,7 +89,7 @@ class Container implements ContainerInterface
      * @param array  $parameters Specific parameters definition.
      * @param bool   $force      Specify if a new element must be given and the dependencies must have be recalculated.
      *
-     * @throws \Psr\Container\Exception\ContainerException
+     * @throws ContainerException
      * @return object|null
      */
 
@@ -111,7 +103,11 @@ class Container implements ContainerInterface
             return $this->resolving[$abstract]($abstract, $parameters);
         }
 
-        return ($this->resolving[$abstract] = $this->construct($abstract, $force))($abstract, $parameters);
+        try {
+            return ($this->resolving[$abstract] = $this->construct($abstract, $force))($abstract, $parameters);
+        } catch (ReflectionException $e) {
+            throw new ContainerException("Fail while attempt to make '$abstract'", 0, $e);
+        }
     }
 
     /**
@@ -128,23 +124,21 @@ class Container implements ContainerInterface
     {
         $inspector = new ReflectionClass($abstract);
 
-        if ($constructor  = $inspector->getConstructor()) {
-            $dependencies = $constructor->getParameters();
-
+        if ($constructor = $inspector->getConstructor() and $dependencies = $constructor->getParameters()) {
             return function (string $abstract, array $parameters) use ($inspector, $dependencies, $force) {
-                $resolvedClassParameters = [];
+                $resolvedClassDependencies = [];
 
                 foreach ($dependencies as $dependency) {
                     if (isset($parameters[$dependency->name])) {
-                           $resolvedClassParameters[] = $parameters[$dependency->name];
-                    } else $resolvedClassParameters[] = $this->resolve($abstract, $dependency, $force);
+                           $resolvedClassDependencies[] = $parameters[$dependency->name];
+                    } else $resolvedClassDependencies[] = $this->resolve($abstract, $dependency, $force);
                 }
 
-                return $inspector->newInstanceArgs($resolvedClassParameters);
+                return $inspector->newInstanceArgs($resolvedClassDependencies);
             };
         }
 
-        return function (string $abstract) {
+        return function (string $abstract, array $parameters) {
             return new $abstract;
         };
     }
@@ -176,6 +170,7 @@ class Container implements ContainerInterface
      * @param string               $abstract   The class name or container element name to resolve dependencies.
      * @param ReflectionParameter  $dependency The class dependency to be resolved.
      *
+     * @throws ContainerException When a dependency cannot be solved.
      * @return Closure
      */
 
@@ -194,7 +189,15 @@ class Container implements ContainerInterface
             };
         }
 
-        return $class->getDefaultValue();
+        try {
+            $value = $dependency->getDefaultValue();
+
+            return function () use ($value) {
+                return $value;
+            };
+        } catch (ReflectionException $e) {
+            throw new ContainerException("Cannot resolve '" . $dependency->getName() . "' of '$abstract'", 0, $e);
+        }
     }
 
     /**
@@ -218,8 +221,8 @@ class Container implements ContainerInterface
      *
      * @param string $abstract Identifier of the entry to look for.
      *
-     * @throws \Psr\Container\Exception\NotFoundException  No entry was found for this identifier.
-     * @throws \Psr\Container\Exception\ContainerException Error while retrieving the entry.
+     * @throws NotFoundException  No entry was found for this identifier.
+     * @throws ContainerException Error while retrieving the entry.
      *
      * @return mixed Entry.
      */
@@ -287,7 +290,7 @@ class Container implements ContainerInterface
      * @param string|closure|object $concrete The element class name, or an closure that makes the element, or the object itself.
      * @param bool                  $shared   Define if the element will be a singleton instance.
      *
-     * @return \Codeburner\Container\Container
+     * @return self
      */
 
     public function set(string $abstract, $concrete, bool $shared = false) : self
@@ -316,7 +319,7 @@ class Container implements ContainerInterface
      * @param string|closure $concrete The element class name, or an closure that makes the element.
      * @param bool           $shared   Define if the element will be a singleton instance.
      *
-     * @return \Codeburner\Container\Container
+     * @return self
      */
 
     public function setIf(string $abstract, $concrete, bool $shared = false) : self
@@ -335,7 +338,7 @@ class Container implements ContainerInterface
      * @param string         $dependencyName The dependency full name.
      * @param string|closure $dependency     The specific object class name or a classure that makes the element.
      *
-     * @return \Codeburner\Container\Container
+     * @return self
      */
 
     public function setTo(string $class, string $dependencyName, $dependency) : self
@@ -364,7 +367,7 @@ class Container implements ContainerInterface
      * @param string         $abstract The alias name that will be used to call the element.
      * @param string|closure $concrete The element class name, or an closure that makes the element.
      *
-     * @return \Codeburner\Container\Container
+     * @return self
      */
 
     public function singleton(string $abstract, $concrete) : self
@@ -380,8 +383,8 @@ class Container implements ContainerInterface
      * @param string $abstract The alias name that will be used to call the object.
      * @param object $instance The object that will be inserted.
      *
-     * @throws \Psr\Container\Exception\ContainerException When $instance is not an object.
-     * @return \Codeburner\Container\Container
+     * @throws ContainerException When $instance is not an object.
+     * @return self
      */
 
     public function instance(string $abstract, $instance) : self
@@ -401,8 +404,8 @@ class Container implements ContainerInterface
      * @param string  $abstract  The alias name that will be used to call the element.
      * @param closure $extension The function that receives the old element and return a new or modified one.
      *
-     * @throws \Psr\Container\Exception\NotFoundException  When no element was found with $abstract key.
-     * @return \Codeburner\Container\Container
+     * @throws NotFoundException  When no element was found with $abstract key.
+     * @return self
      */
 
     public function extend(string $abstract, closure $extension) : self
@@ -429,10 +432,10 @@ class Container implements ContainerInterface
      *
      * @param  string $abstract The alias name that will be used to call the element.
      *
-     * @throws \Psr\Container\Exception\NotFoundException  When no element was found with $abstract key.
-     * @throws \Psr\Container\Exception\ContainerException When the element on $abstract key is not resolvable.
+     * @throws NotFoundException  When no element was found with $abstract key.
+     * @throws ContainerException When the element on $abstract key is not resolvable.
      *
-     * @return \Codeburner\Container\Container
+     * @return self
      */
 
     public function share(string $abstract) : self
