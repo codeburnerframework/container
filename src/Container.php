@@ -62,24 +62,18 @@ class Container implements ContainerInterface
      *
      * @param string|Closure $function   The function or the user function name.
      * @param array          $parameters The predefined dependencies.
-     * @param bool           $force      Specify if a new element must be given and the dependencies must have be recalculated.
      *
      * @return mixed
      */
 
-    public function call($function, array $parameters = [], bool $force = false)
+    public function call($function, array $parameters = [])
     {
         $inspector = new ReflectionFunction($function);
+
         $dependencies = $inspector->getParameters();
-        $resolvedClosureDependencies = [];
+        $dependencies = $this->process('', $parameters, $dependencies);
 
-        foreach ($dependencies as $dependency) {
-            if (isset($parameters[$dependency->name])) {
-                   $resolvedClosureDependencies[] = $parameters[$dependency->name];
-            } else $resolvedClosureDependencies[] = $this->resolve('', $dependency, $force);
-        }
-
-        return call_user_func_array($function, $resolvedClosureDependencies);
+        return call_user_func_array($function, $dependencies);
     }
 
     /**
@@ -87,15 +81,14 @@ class Container implements ContainerInterface
      *
      * @param string $abstract   The class name or container element name to make.
      * @param array  $parameters Specific parameters definition.
-     * @param bool   $force      Specify if a new element must be given and the dependencies must have be recalculated.
      *
      * @throws ContainerException
      * @return object|null
      */
 
-    public function make(string $abstract, array $parameters = [], bool $force = false)
+    public function make(string $abstract, array $parameters = [])
     {
-        if ($force === false && isset($this->collection[$abstract])) {
+        if (isset($this->collection[$abstract])) {
             return $this->get($abstract);
         }
 
@@ -104,7 +97,7 @@ class Container implements ContainerInterface
         }
 
         try {
-            return ($this->resolving[$abstract] = $this->construct($abstract, $force))($abstract, $parameters);
+            return ($this->resolving[$abstract] = $this->construct($abstract))($abstract, $parameters);
         } catch (ReflectionException $e) {
             throw new ContainerException("Fail while attempt to make '$abstract'", 0, $e);
         }
@@ -114,33 +107,48 @@ class Container implements ContainerInterface
      * Construct a class and all the dependencies using the reflection library of PHP.
      *
      * @param string $abstract The class name or container element name to make.
-     * @param bool   $force    Specify if a new element must be given and the dependencies must have be recalculated.
      *
      * @throws ReflectionException
      * @return Closure
      */
 
-    protected function construct(string $abstract, bool $force) : Closure
+    protected function construct(string $abstract) : Closure
     {
         $inspector = new ReflectionClass($abstract);
 
-        if ($constructor = $inspector->getConstructor() and $dependencies = $constructor->getParameters()) {
-            return function (string $abstract, array $parameters) use ($inspector, $dependencies, $force) {
-                $resolvedClassDependencies = [];
-
-                foreach ($dependencies as $dependency) {
-                    if (isset($parameters[$dependency->name])) {
-                           $resolvedClassDependencies[] = $parameters[$dependency->name];
-                    } else $resolvedClassDependencies[] = $this->resolve($abstract, $dependency, $force);
-                }
-
-                return $inspector->newInstanceArgs($resolvedClassDependencies);
+        if (($constructor = $inspector->getConstructor()) && ($dependencies = $constructor->getParameters())) {
+            return function (string $abstract, array $parameters) use ($inspector, $dependencies) {
+                return $inspector->newInstanceArgs(
+                    $this->process($abstract, $parameters, $dependencies)
+                );
             };
         }
 
-        return function (string $abstract, array $parameters) {
+        return function (string $abstract) {
             return new $abstract;
         };
+    }
+
+    /**
+     * Process all dependencies
+     *
+     * @param string $abstract     The class name or container element name to make
+     * @param array  $parameters   User defined parameters that must be used instead of resolved ones
+     * @param array  $dependencies Array of ReflectionParameter
+     *
+     * @throws ContainerException When a dependency cannot be solved.
+     * @return array
+     */
+
+    protected function process(string $abstract, array $parameters, array $dependencies) : array
+    {
+        foreach ($dependencies as &$dependency) {
+            if (isset($parameters[$dependency->name])) {
+                   $dependency = $parameters[$dependency->name];
+            } else $dependency = $this->resolve($abstract, $dependency);
+        }
+
+        return $dependencies;
     }
 
     /**
@@ -148,16 +156,16 @@ class Container implements ContainerInterface
      *
      * @param string               $abstract   The class name or container element name to resolve dependencies.
      * @param ReflectionParameter  $dependency The class dependency to be resolved.
-     * @param bool                 $force      Specify if the dependencies must be recalculated.
      *
+     * @throws ContainerException When a dependency cannot be solved.
      * @return Object
      */
 
-    protected function resolve(string $abstract, ReflectionParameter $dependency, bool $force)
+    protected function resolve(string $abstract, ReflectionParameter $dependency)
     {
         $key = $abstract.$dependency->name;
 
-        if (! isset($this->resolved[$key]) || $force === true) {
+        if (! isset($this->resolved[$key])) {
             $this->resolved[$key] = $this->generate($abstract, $dependency);
         }
 
@@ -196,7 +204,7 @@ class Container implements ContainerInterface
                 return $value;
             };
         } catch (ReflectionException $e) {
-            throw new ContainerException("Cannot resolve '" . $dependency->getName() . "' of '$abstract'", 0, $e);
+            throw new ContainerException("Cannot resolve '" . $dependency->name . "' of '$abstract'", 0, $e);
         }
     }
 
@@ -411,7 +419,7 @@ class Container implements ContainerInterface
     public function extend(string $abstract, closure $extension) : self
     {
         if (! isset($this->collection[$abstract])) {
-            throw new NotFoundException;
+            throw new NotFoundException($abstract);
         }
 
         $object = $this->collection[$abstract];
