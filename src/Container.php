@@ -88,16 +88,13 @@ class Container implements ContainerInterface
 
     public function make(string $abstract, array $parameters = [])
     {
-        if (isset($this->collection[$abstract])) {
-            return $this->get($abstract);
-        }
-
         if (isset($this->resolving[$abstract])) {
             return $this->resolving[$abstract]($abstract, $parameters);
         }
 
         try {
-            return ($this->resolving[$abstract] = $this->construct($abstract))($abstract, $parameters);
+            $this->resolving[$abstract] = $this->construct($abstract);
+            return $this->resolving[$abstract]($abstract, $parameters);
         } catch (ReflectionException $e) {
             throw new ContainerException("Fail while attempt to make '$abstract'", 0, $e);
         }
@@ -117,6 +114,11 @@ class Container implements ContainerInterface
         $inspector = new ReflectionClass($abstract);
 
         if (($constructor = $inspector->getConstructor()) && ($dependencies = $constructor->getParameters())) {
+
+            // if, and only if, a class has a constructor with parameters, we try to solve then
+            // creating a resolving callback that in every call will recalculate all dependencies
+            // for the given class, and offcourse, using a cached resolving callback if exists.
+
             return function (string $abstract, array $parameters) use ($inspector, $dependencies) {
                 return $inspector->newInstanceArgs(
                     $this->process($abstract, $parameters, $dependencies)
@@ -204,7 +206,7 @@ class Container implements ContainerInterface
                 return $value;
             };
         } catch (ReflectionException $e) {
-            throw new ContainerException("Cannot resolve '" . $dependency->name . "' of '$abstract'", 0, $e);
+            throw new ContainerException("Cannot resolve '$dependency->name' of '$abstract'", 0, $e);
         }
     }
 
