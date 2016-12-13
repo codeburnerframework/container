@@ -18,7 +18,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	{
 		$this->container->singleton('a', 'stdClass');
 
-		$this->assertTrue($this->container->make('a') instanceof stdClass && $this->container->make('a') == $this->container->make('a'));
+		$this->assertTrue($this->container->get('a') instanceof stdClass && $this->container->get('a') == $this->container->get('a'));
 	}
 
 	public function testMakeInvalid()
@@ -192,7 +192,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 	{
 		$this->container->set('a', 'stdClass');
 
-		$this->assertInstanceof('stdClass', $this->container->make('a'));
+		$this->assertInstanceof('stdClass', $this->container->get('a'));
 	}
 
 	public function testContainerAware()
