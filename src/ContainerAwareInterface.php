@@ -16,21 +16,24 @@ namespace Codeburner\Container;
  * @author Alex Rohleder <alexrohleder96@outlook.com>
  * @see https://github.com/codeburnerframework/container
  */
+
 interface ContainerAwareInterface
 {
 
     /**
      * Inject the container instance into the class.
      *
-     * @param \Codeburner\Container\Container $container
+     * @param ContainerInterface $container
      */
-    public function setContainer(Container $container);
+
+    public function setContainer(ContainerInterface $container);
 
     /**
      * get the container instance.
      *
-     * @return \Codeburner\Container\Container $container
+     * @return ContainerInterface $container
      */
+
     public function getContainer();
 
 }
