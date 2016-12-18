@@ -382,19 +382,21 @@ class Container implements ContainerInterface
 
     public function setTo(string $class, string $dependencyName, $dependency) : ContainerInterface
     {
+        $key = "$class$dependencyName";
+
         if ($dependency instanceof Closure === false) {
-            if (is_object($dependency)) {
-                $dependency = function () use ($dependency) {
-                    return $dependency;
-                };
-            } else {
-                $dependency = function () use ($dependency) {
-                    return $this->get($dependency);
-                };
-            }
+            $this->set($key, $dependency);
+
+            $resolved = $this->collection[$key];
+
+            $dependency = function () use ($resolved) {
+                return $resolved;
+            };
+
+            unset($resolved, $this->collection[$key]);
         }
 
-        $this->dependencies[$class.$dependencyName] = $dependency;
+        $this->dependencies[$key] = $dependency;
 
         return $this;
     }
