@@ -290,23 +290,36 @@ class Container implements ContainerInterface
      * Verify if an element has a singleton instance.
      *
      * @param  string The class name or container element name to resolve dependencies.
+     *
+     * @throws NotFoundException When $abstract does not exists
      * @return bool
      */
 
     public function isSingleton(string $abstract) : bool
     {
-        return $this->has($abstract) && $this->collection[$abstract] instanceof Closure === false;
+        if (! $this->has($abstract)) {
+            throw new NotFoundException("Element '$abstract' not found");
+        }
+
+        return $this->collection[$abstract] instanceof Closure === false;
     }
 
     /**
      * Verify if an element is a instance of something.
      *
      * @param  string The class name or container element name to resolve dependencies.
+     *
+     * @throws NotFoundException When $abstract does not exists
      * @return bool
      */
+
     public function isInstance(string $abstract) : bool
     {
-        return $this->has($abstract) && is_object($this->collection[$abstract]);
+        if (! $this->has($abstract)) {
+            throw new NotFoundException("Element '$abstract' not found");
+        }
+
+        return is_object($this->collection[$abstract]);
     }
 
     /**
@@ -350,7 +363,7 @@ class Container implements ContainerInterface
 
     public function setIf(string $abstract, $concrete, bool $shared = false) : ContainerInterface
     {
-        if (! isset($this->collection[$abstract])) {
+        if (! $this->has($abstract)) {
             $this->set($abstract, $concrete, $shared);
         }
 

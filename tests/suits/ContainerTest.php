@@ -100,6 +100,13 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue($this->container->isSingleton('my-binding'));
 	}
 
+    public function testIsSingletonFail()
+    {
+        $this->setExpectedException(Throwable::class);
+
+        $this->container->isSingleton('some-unknown-key');
+    }
+
 	public function testSetSingleton()
 	{
 		$this->container->set('my-binding', stdClass::class, true);
@@ -304,15 +311,6 @@ class ContainerTest extends PHPUnit_Framework_TestCase
         $this->container->instance('test', 'some-random-parameter');
     }
 
-    public function testShareException()
-    {
-        $this->setExpectedException(Throwable::class);
-
-        $this->container->instance('test', $this->container->make(OneDependencyClass::class));
-
-        $this->container->share('test');
-    }
-
     public function testUnresolvableClass()
     {
         $this->setExpectedException(Throwable::class);
@@ -325,6 +323,13 @@ class ContainerTest extends PHPUnit_Framework_TestCase
         $this->container->instance('test', $this->container->make(OneDependencyClass::class));
 
         $this->assertTrue($this->container->isInstance('test'));
+    }
+
+    public function testIsInstanceFail()
+    {
+        $this->setExpectedException(Throwable::class);
+
+        $this->container->isInstance('some-unknown-key');
     }
 
 }
