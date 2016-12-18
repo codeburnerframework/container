@@ -194,16 +194,7 @@ class Container implements ContainerInterface
     protected function generate(string $abstract, ReflectionParameter $dependency) : Closure
     {
         if ($class = $dependency->getClass()) {
-            $classname = $class->name;
-            $key = $abstract.$classname;
-
-            if (isset($this->dependencies[$key])) {
-                return $this->dependencies[$key];
-            }
-
-            return function () use ($classname) {
-                return $this->make($classname);
-            };
+            return $this->build($class->name, "{$abstract}{$class->name}");
         }
 
         try {
@@ -215,6 +206,26 @@ class Container implements ContainerInterface
         } catch (ReflectionException $e) {
             throw new ContainerException("Cannot resolve '$dependency->name' of '$abstract'", 0, $e);
         }
+    }
+
+    /**
+     * Create a build closure for a given class
+     *
+     * @param string $classname The class that need to be build
+     * @param string $entry     Cache entry to search
+     *
+     * @return Closure
+     */
+
+    protected function build(string $classname, string $entry) : Closure
+    {
+        if (isset($this->dependencies[$entry])) {
+            return $this->dependencies[$entry];
+        }
+
+        return function () use ($classname) {
+            return $this->make($classname);
+        };
     }
 
     /**
