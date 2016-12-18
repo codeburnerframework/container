@@ -265,14 +265,14 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
     public function testNotFound()
     {
-        $this->setExpectedException(NotFoundException::class);
+        $this->setExpectedException(Throwable::class);
 
         $this->container->get('some-unknown-key');
     }
 
     public function testNotFoundExtend()
     {
-        $this->setExpectedException(NotFoundException::class);
+        $this->setExpectedException(Throwable::class);
 
         $this->container->extend('some-unknown-key', function ($obj, $container) {
             return true;
@@ -281,14 +281,14 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
     public function testNotFoundShare()
     {
-        $this->setExpectedException(NotFoundException::class);
+        $this->setExpectedException(Throwable::class);
 
         $this->container->share('some-unknown-key');
     }
 
     public function testErrorResolving()
     {
-        $this->setExpectedException(ContainerException::class);
+        $this->setExpectedException(Throwable::class);
 
         $this->container->set('test', function () {
             throw new Exception('error during execution');
@@ -299,14 +299,14 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
     public function testInstanceWithoutObject()
     {
-        $this->setExpectedException(ContainerException::class);
+        $this->setExpectedException(Throwable::class);
 
         $this->container->instance('test', 'some-random-parameter');
     }
 
     public function testShareException()
     {
-        $this->setExpectedException(ContainerException::class);
+        $this->setExpectedException(Throwable::class);
 
         $this->container->instance('test', $this->container->make(OneDependencyClass::class));
 
@@ -315,7 +315,7 @@ class ContainerTest extends PHPUnit_Framework_TestCase
 
     public function testUnresolvableClass()
     {
-        $this->setExpectedException(ContainerException::class);
+        $this->setExpectedException(Throwable::class);
 
         $this->container->make(UnresolvableDependencyClass::class);
     }
