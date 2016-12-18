@@ -94,12 +94,11 @@ class Container implements ContainerInterface
 
     public function make(string $abstract, array $parameters = [])
     {
-        if (isset($this->resolving[$abstract])) {
-            return $this->resolving[$abstract]($abstract, $parameters);
-        }
-
         try {
-            $this->resolving[$abstract] = $this->construct($abstract);
+            if (! isset($this->resolving[$abstract])) {
+                $this->resolving[$abstract] = $this->construct($abstract);
+            }
+
             return $this->resolving[$abstract]($abstract, $parameters);
         } catch (ReflectionException $e) {
             throw new ContainerException("Fail while attempt to make '$abstract'", 0, $e);
@@ -296,7 +295,7 @@ class Container implements ContainerInterface
 
     public function isSingleton(string $abstract) : bool
     {
-        return isset($this->collection[$abstract]) && $this->collection[$abstract] instanceof Closure === false;
+        return $this->has($abstract) && $this->collection[$abstract] instanceof Closure === false;
     }
 
     /**
@@ -307,7 +306,7 @@ class Container implements ContainerInterface
      */
     public function isInstance(string $abstract) : bool
     {
-        return isset($this->collection[$abstract]) && is_object($this->collection[$abstract]);
+        return $this->has($abstract) && is_object($this->collection[$abstract]);
     }
 
     /**
@@ -437,19 +436,9 @@ class Container implements ContainerInterface
 
     public function extend(string $abstract, closure $extension) : ContainerInterface
     {
-        if (! isset($this->collection[$abstract])) {
-            throw new NotFoundException($abstract);
-        }
+        $object = $this->get($abstract);
 
-        $object = $this->collection[$abstract];
-
-        if ($object instanceof Closure) {
-            $this->collection[$abstract] = function () use ($object, $extension) {
-                return $extension($object($this), $this);
-            };
-        } else {
-            $this->collection[$abstract] = $extension($object, $this);
-        }
+        $this->collection[$abstract] = $extension($object, $this);
 
         return $this;
     }
@@ -467,15 +456,9 @@ class Container implements ContainerInterface
 
     public function share(string $abstract) : ContainerInterface
     {
-        if (! isset($this->collection[$abstract])) {
-            throw new NotFoundException("Element '$abstract' not found");
-        }
+        $object = $this->get($abstract);
 
-        if (! $this->collection[$abstract] instanceof Closure) {
-            throw new ContainerException("'$abstract' must be a resolvable element");
-        }
-
-        $this->collection[$abstract] = $this->collection[$abstract]($this);
+        $this->collection[$abstract] = $object;
 
         return $this;
     }
