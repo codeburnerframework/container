@@ -230,10 +230,10 @@ class Container implements ContainerInterface
     /**
      * Reset the container, removing all the elements, cache and options.
      *
-     * @return self
+     * @return ContainerInterface
      */
 
-    public function flush() : self
+    public function flush() : ContainerInterface
     {
         $this->collection = [];
         $this->dependencies = [];
@@ -317,10 +317,10 @@ class Container implements ContainerInterface
      * @param string|closure|object $concrete The element class name, or an closure that makes the element, or the object itself.
      * @param bool                  $shared   Define if the element will be a singleton instance.
      *
-     * @return self
+     * @return ContainerInterface
      */
 
-    public function set(string $abstract, $concrete, bool $shared = false) : self
+    public function set(string $abstract, $concrete, bool $shared = false) : ContainerInterface
     {
         if (is_object($concrete)) {
             return $this->instance($abstract, $concrete);
@@ -346,10 +346,10 @@ class Container implements ContainerInterface
      * @param string|closure $concrete The element class name, or an closure that makes the element.
      * @param bool           $shared   Define if the element will be a singleton instance.
      *
-     * @return self
+     * @return ContainerInterface
      */
 
-    public function setIf(string $abstract, $concrete, bool $shared = false) : self
+    public function setIf(string $abstract, $concrete, bool $shared = false) : ContainerInterface
     {
         if (! isset($this->collection[$abstract])) {
             $this->set($abstract, $concrete, $shared);
@@ -365,10 +365,10 @@ class Container implements ContainerInterface
      * @param string         $dependencyName The dependency full name.
      * @param string|closure $dependency     The specific object class name or a classure that makes the element.
      *
-     * @return self
+     * @return ContainerInterface
      */
 
-    public function setTo(string $class, string $dependencyName, $dependency) : self
+    public function setTo(string $class, string $dependencyName, $dependency) : ContainerInterface
     {
         if ($dependency instanceof Closure === false) {
             if (is_object($dependency)) {
@@ -394,10 +394,10 @@ class Container implements ContainerInterface
      * @param string         $abstract The alias name that will be used to call the element.
      * @param string|closure $concrete The element class name, or an closure that makes the element.
      *
-     * @return self
+     * @return ContainerInterface
      */
 
-    public function singleton(string $abstract, $concrete) : self
+    public function singleton(string $abstract, $concrete) : ContainerInterface
     {
         $this->set($abstract, $concrete, true);
 
@@ -411,10 +411,10 @@ class Container implements ContainerInterface
      * @param object $instance The object that will be inserted.
      *
      * @throws ContainerException When $instance is not an object.
-     * @return self
+     * @return ContainerInterface
      */
 
-    public function instance(string $abstract, $instance) : self
+    public function instance(string $abstract, $instance) : ContainerInterface
     {
         if (! is_object($instance)) {
             throw new ContainerException('Trying to store ' . gettype($type) . ' as object.');
@@ -432,10 +432,10 @@ class Container implements ContainerInterface
      * @param closure $extension The function that receives the old element and return a new or modified one.
      *
      * @throws NotFoundException  When no element was found with $abstract key.
-     * @return self
+     * @return ContainerInterface
      */
 
-    public function extend(string $abstract, closure $extension) : self
+    public function extend(string $abstract, closure $extension) : ContainerInterface
     {
         if (! isset($this->collection[$abstract])) {
             throw new NotFoundException($abstract);
@@ -462,10 +462,10 @@ class Container implements ContainerInterface
      * @throws NotFoundException  When no element was found with $abstract key.
      * @throws ContainerException When the element on $abstract key is not resolvable.
      *
-     * @return self
+     * @return ContainerInterface
      */
 
-    public function share(string $abstract) : self
+    public function share(string $abstract) : ContainerInterface
     {
         if (! isset($this->collection[$abstract])) {
             throw new NotFoundException("Element '$abstract' not found");
