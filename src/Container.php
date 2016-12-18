@@ -417,7 +417,7 @@ class Container implements ContainerInterface
     public function instance(string $abstract, $instance) : ContainerInterface
     {
         if (! is_object($instance)) {
-            throw new ContainerException('Trying to store ' . gettype($type) . ' as object.');
+            throw new ContainerException('Trying to store ' . gettype($instance) . ' as object.');
         }
 
         $this->collection[$abstract] = $instance;
