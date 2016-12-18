@@ -11,7 +11,6 @@
 namespace Codeburner\Container;
 
 use Closure, Exception, ReflectionClass, ReflectionException, ReflectionFunction, ReflectionParameter;
-use Psr\Container\ContainerInterface;
 use Codeburner\Container\Exceptions\{ContainerException, NotFoundException};
 
 /**
