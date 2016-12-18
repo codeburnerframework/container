@@ -385,13 +385,22 @@ class Container implements ContainerInterface
         $key = "$class$dependencyName";
 
         if ($dependency instanceof Closure === false) {
-            $this->set($key, $dependency);
 
+            // let's use temporarily the set method to resolve
+            // the $dependency if it is not a closure ready to use.
+
+            $this->set($key, $dependency);
             $resolved = $this->collection[$key];
+
+            // now we already have a resolved version of $dependency
+            // we just need to ensure the dependencies type, a closure.
 
             $dependency = function () use ($resolved) {
                 return $resolved;
             };
+
+            // we have used the set method to resolve the $dependency
+            // now that we have done all the process let's clear the memory.
 
             unset($resolved, $this->collection[$key]);
         }
