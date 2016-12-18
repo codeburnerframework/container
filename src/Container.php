@@ -15,6 +15,13 @@ use Psr\Container\ContainerInterface;
 use Codeburner\Container\Exceptions\{ContainerException, NotFoundException};
 
 /**
+ * Explicit Avoiding autoload for the container interface,
+ * because it is aways needed.
+ */
+
+require_once __DIR__ . '/ContainerInterface.php';
+
+/**
  * The container class is reponsable to construct all objects
  * of the project automatically, with total abstraction of dependencies.
  *
